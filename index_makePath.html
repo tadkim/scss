@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Stuckyi style - Break</title>
+
+    <style>
+        body{ background:#222;}
+        svg{ border: aquamarine solid 2px;}
+        path{ fill:lightgreen;}
+
+    </style>
+</head>
+<body>
+
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+//    var points = [[480, 200], [580, 400], [680, 100], [780, 300], [180, 300], [280, 100], [380, 400]];
+//    var points = [[-20, 0],[-10, -10],[0, 0],[20, -20],[40, 0],[20, -20],[0, 0],[-10, 10]];
+var points = [
+    [-40, 0], [-20, -10], [ 0,0],  [20, -10],
+    [40, 0],   [20,10],      [0,0],  [-20,10]
+];
+
+/*
+var points = [
+    [-40, 0], [-10, -10],  [0, 0],[ 0,0],[10, -10],
+    [40, 0],   [10,10],      [0,0],  [-10,12]
+];
+*/
+
+
+    var canvas = d3.select("body").append("svg")
+            .attr("width", 960)
+            .attr("height", 1500);
+
+    var svg = canvas.append("g").attr("transform", "translate(130, 130)");
+
+    svg.append("path").attr("d", computeTilt(200, 200, 40)).attr("transform", "translate(130, 130)");
+    svg.append("path").attr("d", computeTilt(200, 200, 80)).attr("transform", "translate(330, 130)");
+    svg.append("path").attr("d", computeTilt(200, 200, 160)).attr("transform", "translate(530, 130)");
+
+    svg.append("path").attr("d", computeTilt(100, 200, 40)).attr("transform", "translate(130, 330)");
+    svg.append("path").attr("d", computeTilt(200, 300, 40)).attr("transform", "translate(330, 330)");
+    svg.append("path").attr("d", computeTilt(200, 300, 10)).attr("transform", "translate(530, 330)");
+
+
+
+
+/*
+    svg.selectAll(".point")
+            .data(points)
+            .enter().append("circle")
+            .attr("r", 1)
+            .attr("transform", function(d) { return "translate(" + d + ")"; })
+            .on("mouseover", function(d,i) {console.log(d + "," + i); });
+
+    svg.selectAll(".text")
+        .data(points)
+        .enter().append("text")
+            .style("font-size", "3px")
+            .style("letter-spacing", "0.2px")
+            .attr("dx", "2px")
+            .attr("dy", "-2px")
+            .text(function(d,i){ return points[i] + ", " + (i+1) + "번째"; })
+            .attr("fill", "#e9e9e9")
+            .style("opacity", "0.6")
+        .attr("transform", function(d) { return "translate(" + d + ") rotate(-15)"; });
+*/
+
+function computeTilt2(){
+//    var x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8;
+    var posEl = {
+        m:{ mx:250, my:50 },
+        c1 : { x1: 120, y1:50, x2:100, y2:100, x3:160, y3:160 },
+        c2 : { x1: 200, y1:200, x2:200, y2:250, x3:160, y3:290 },
+        c3: { x1: 100, y1:350, x2:120, y2:450, x3:250, y3:450 }
+    };
+
+    var moveTo = "M" + posEl.m.mx + "," + posEl.m.my;
+
+    var C1 = " C " +
+            posEl.c1.x1 + "," + posEl.c1.y1 + " " +
+            posEl.c1.x2 + "," + posEl.c1.y2 + " " +
+            posEl.c1.x3 + "," + posEl.c1.y3;
+
+    var C2 = " C " +
+            posEl.c2.x1 + "," + posEl.c2.y1 + " " +
+            posEl.c2.x2 + "," + posEl.c2.y2 + " " +
+            posEl.c2.x3 + "," + posEl.c2.y3;
+
+
+    var C3 = " C " +
+            posEl.c3.x1 + "," + posEl.c3.y1 + " " +
+            posEl.c3.x2 + "," + posEl.c3.y2 + " " +
+            posEl.c3.x3 + "," + posEl.c3.y3;
+
+    return moveTo + C1 + C2 + C3;
+}
+
+
+function computeTilt(width, height, middleWidth){
+    //size attributes
+    var  a = width/2,
+            b = height/2,
+            c = middleWidth/2; //middle width''
+
+    //compute quadratic bezier curve point (x, y)
+    var  a1  = { x:-a/2, y:-3*b/4 },
+            a2 = { x:-a, y:-b/2 },
+            a3 = { x:-(a+c)/2, y:-b/4 },
+            a4 = { x:-c, y:0},
+            a5 = { x:-(a+c)/2, y:b/4 },
+            a6 = { x:-a, y:b/2},
+            a7 = { x:-a/2, y:3*b/4 },
+            a8 = { x:0, y:b },
+            a9 = { x:a/2, y:3*b/4},
+            a10 = { x:a, y:b/2 },
+            a11 = { x:(a+c)/2, y:b/4},
+            a12 = { x:c, y:0 },
+            a13 = { x:(a+c)/2, y:-b/4 },
+            a14 = { x:a, y:-b/2 },
+            a15 = { x:a/2, y:-3*b/4 },
+            a16 = { x:0, y:-b};
+
+    //MoveTo
+    var MV = "M" + a1.x + "," + a1.y;
+
+    //Quadratics
+    var Q1 = " Q " + a2.x + "," + a2.y + " " +  a3.x + "," + a3.y ;
+    var Q2 = " Q " +  a4.x + "," + a4.y + " " +  a5.x + "," + a5.y ;
+    var Q3 = " Q " +  a6.x + "," + a6.y + " " +  a7.x + "," + a7.y ;
+    var Q4 = " Q " +  a8.x + "," + a8.y + " " +  a9.x + "," + a9.y ;
+    var Q5 = " Q " +  a10.x + "," + a10.y + " " +  a11.x + "," + a11.y ;
+    var Q6 = " Q " +  a12.x + "," + a12.y + " " +  a13.x + "," + a13.y ;
+    var Q7 = " Q " +  a14.x + "," + a14.y + " " +  a15.x + "," + a15.y ;
+    var Q8 = " Q " +  a16.x + "," + a16.y + " " +  a1.x + "," + a1.y ;
+
+    //return values
+    return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
+}
+
+
+
+
+
+</script>
+
+
+</body>
+</html>

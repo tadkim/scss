@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Stuckyi style - Break</title>
+    <link rel="stylesheet" href="css/style.css"/>
+
+    <style>
+
+        path {
+            fill: #e9e9e9;
+            stroke: yellow;
+            opacity:0.2;
+            stroke-width: 0.5px;
+        }
+
+        circle {
+            fill: steelblue;
+            stroke: #fff;
+
+            /*stroke-width: 3px;*/
+        }
+        .text{
+            font-size:6px;
+            font-weight:lighter;
+            opacity:0.5;
+        }
+    </style>
+</head>
+<body>
+<div id="contents" style="margin-left:300px;"></div>
+
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+//    var points = [[480, 200], [580, 400], [680, 100], [780, 300], [180, 300], [280, 100], [380, 400]];
+//    var points = [[-20, 0],[-10, -10],[0, 0],[20, -20],[40, 0],[20, -20],[0, 0],[-10, 10]];
+var points = [
+    [-40, 0], [-20, -10], [ 0,0],  [20, -10],
+    [40, 0],   [20,10],      [0,0],  [-20,10]
+];
+
+/*
+var points = [
+    [-40, 0], [-10, -10],  [0, 0],[ 0,0],[10, -10],
+    [40, 0],   [10,10],      [0,0],  [-10,12]
+];
+*/
+
+
+    var canvas = d3.select("#conte  nts").append("svg")
+            .attr("width", 960)
+            .attr("height", 1000);
+
+//    var svg = canvas.append("g");
+    var svg = canvas.append("g").attr("transform", "translate(400, 300) scale(4)");
+
+
+
+    var path = svg.append("path")
+            .data([points])
+            .attr("d", d3.svg.line()
+                    .tension(0) // Catmull–Rom
+                    .interpolate("cardinal-closed"));
+
+    svg.selectAll(".point")
+            .data(points)
+            .enter().append("circle")
+            .attr("r", 1)
+            .attr("transform", function(d) { return "translate(" + d + ")"; })
+            .on("mouseover", function(d,i) {console.log(d + "," + i); });
+
+    svg.selectAll(".text")
+        .data(points)
+        .enter().append("text")
+            .style("font-size", "3px")
+            .style("letter-spacing", "0.2px")
+            .attr("dx", "2px")
+            .attr("dy", "-2px")
+            .text(function(d,i){ return points[i] + ", " + (i+1) + "번째"; })
+            .attr("fill", "#e9e9e9")
+            .style("opacity", "0.6")
+        .attr("transform", function(d) { return "translate(" + d + ") rotate(-15)"; });
+
+//    var circle = svg.append("circle").attr("r", 4).attr("transform", "translate(" + points[0] + ")");
+
+
+
+//    transition();
+
+    function transition() {
+        circle.transition()
+                .duration(10000)
+                .attrTween("transform", translateAlong(path.node()))
+                .each("end", transition);
+    }
+
+    // Returns an attrTween for translating along the specified path element.
+    function translateAlong(path) {
+        var l = path.getTotalLength();
+        return function(d, i, a) {
+            return function(t) {
+                var p = path.getPointAtLength(t * l);
+                return "translate(" + p.x + "," + p.y + ")";
+            };
+        };
+    }
+
+</script>
+
+
+</body>
+</html>

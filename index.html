@@ -3,8 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <title>Stuckyi style - Break</title>
+    <link rel="stylesheet" href="css/style.css"/>
+    <style>
+
+        .arc {
+            fill: blue;
+            stroke:black;
+            stroke-width:55px;
+        }
+        .arc-round{
+            stroke-width:55px;
+            stroke-linejoin: round;
+            fill:hsl(50, 85%, 60%);
+        }
+
+
+        /* for test */
+        .test-circle{
+            fill:hsla(50, 85%, 60%, 0.3);
+            stroke:yellow;
+
+        }
+
+
+    </style>
 </head>
 <body>
+<h1>Break뷁</h1>
+<p>svg size: 1280x960</p>
+<div id="d3area"></div>
+<div id="d3area_head"></div>
+
+<br/>
+
+<button onclick="changeFunction()">
+    누르면 2초당 애니메이션으로변화
+</button>
+
+
+<!-- library -->
+<script src="js/lib/jquery-1.11.0.js"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<!--<script src="https://d3js.org/d3-path.v0.1.min.js"></script>-->
+<!--<script src="https://d3js.org/d3-shape.v0.6.min.js"></script>-->
+
+
+<!-- shape -->
+<!--<script src="js/shape/app.js"></script>-->
+<script src="js/shape/stuckyi_quardic.js.js"></script>
+<!--<script src="js/shape/arc_radius.js"></script>-->
+<!--<script src="js/shape/arc_pie.js"></script>-->
+<!--<script src="js/shape/polygon_basic.js"></script>-->
 
 
 </body>
