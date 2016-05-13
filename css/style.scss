@@ -1,126 +1,45 @@
-$col_face:#ffcc99;
-$top:30px;
+
+@import url(https://fonts.googleapis.com/earlyaccess/notosanskr.css);
+@import url(https://fonts.googleapis.com/earlyaccess/nanummyeongjo.css);
+$col-simpson : hsl(52, 100%, 48%);
+
+//font
+@mixin ft_noto($fontSize:60px, $font-weight:200, $letter-spacing:-1px, $line-height:130%){
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: $fontSize;
+  font-weight: $font-weight;
+  letter-spacing: $letter-spacing;
+  line-height: $line-height;
+}
 
 
-$size_eyes : 60px;
-$size_eyes_inner : 14px;
+//shape
+@mixin simpson{
+  fill:$col-simpson;
+  stroke: 1px solid black;
+}
 
-
-
-//왼쪽 vs 오른쪽 눈 판단 해 마진 부여
-@function checkEyesType($types){
-  @if($types) == left{  @return 30px 0 0 30px;  }
-  @else{  @return 30px 0 0 200px;  }
+//utilize
+@mixin preloader{
+  position: fixed; left: 0; top: 0; z-index: 999; width: 100%; height: 100%;
+  overflow: visible; background: #333 url('http://files.mimoymima.com/images/loading.gif') no-repeat center center;
 }
 
 
 
 
-// 눈 스타일
-@mixin eyes(
-  $width:60px, $height:$width,
-  $types:left, $color:black){
-  position:absolute;
-  width:$width;  height:$height;
 
-  margin:checkEyesType($types);
-
-  border-radius:50%;
-  background:$color;
-}
-
-// head type A -------------------------------
-@mixin head_type_A($width:300px, $height:$width){
-  width:$width;  height:$height;
-  background: $col_face;
-
-  top:$top;
-
-  border-bottom-right-radius: 100%;
-  border-bottom-left-radius: 100%;
-
-  .eyes_left{
-	@include eyes($size_eyes, $size_eyes, left, black);
-
-	.eyes_left_inner{
-	  @include eyes($size_eyes_inner, $size_eyes_inner, right,white);
-	  margin: $size_eyes/2 - 10
-	}
-
-	.eyes_left_inner_2{
-	  @include eyes($size_eyes_inner + 10, $size_eyes_inner + 10, right,white);
-	  margin: $size_eyes/2 - 10
-	}
-
-  }
-  .eyes_right{
-	@include eyes($size_eyes, $size_eyes, right, black);
-	.eyes_right_inner{
-	  @include eyes($size_eyes_inner, $size_eyes_inner, right, white);
-	  margin: $size_eyes/2 - 10;
-	}
-  }
+h1{
+  @include ft_noto;
+  margin-bottom: 40px;
 }
 
 
-
-// head type A -------------------------------
-@mixin head_type_B($width:300px, $height:$width){
-  width:$width;  height:$height;
-  background: $col_face;
-
-  top:$top;
-
-  border-bottom-right-radius: 10%;
-  border-bottom-left-radius: 10%;
-
-  .eyes_left{
-	@include eyes($size_eyes, $size_eyes, left, black);
-
-	.eyes_left_inner{
-	  @include eyes($size_eyes_inner, $size_eyes_inner, right,white);
-	  margin: $size_eyes/2 - 10
-	}
-
-	.eyes_left_inner_2{
-	  @include eyes($size_eyes_inner + 10, $size_eyes_inner + 10, right,white);
-	  margin: $size_eyes/2 - 10
-	}
-
-  }
-  .eyes_right{
-	@include eyes($size_eyes, $size_eyes, right, black);
-	.eyes_right_inner{
-	  @include eyes($size_eyes_inner, $size_eyes_inner, right, white);
-	  margin: $size_eyes/2 - 10;
-	}
-  }
+path{
+  @include simpson; //심슨테마
 }
 
-
-
-
-.head_A{  @include head_type_A;  }
-.head_B {  @include head_type_B;  }
-
-
-
-
-.head-test{
-  background:red;
-  width:10px;
-  height:10px;
-}
-
-
-/* for test */
-body{
-  background:#222;
-  color:white;
-  letter-spacing:-1px;
-  line-height:135%;
-}
-
-svg {
-  border: yellowgreen solid 1px;
+//pre-loader
+.js div#preloader {
+  @include preloader;
 }
