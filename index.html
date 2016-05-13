@@ -18,6 +18,8 @@
         }
         path{
             fill:hsl(50, 85%, 60%);
+            stroke:#000;
+            stroke-width:1px;
             /*fill:red;*/
         }
 
@@ -25,29 +27,14 @@
 </head>
 <body>
 <div id="test-div"></div>
-<svg>
-    <defs>
-        <g id="shape">
-            <rect x="50" y="50" width="50" height="50" />
-            <circle cx="50" cy="50" r="50" />
-        </g>
-    </defs>
-
-    <!--<use xlink:href="#shape" x="50" y="50" />-->
-    <!--<use xlink:href="#shape" x="200" y="50" />-->
-
-</svg>
 
 <h1>Break뷁</h1>
 <p>svg size: 1280x960</p>
+
 <div id="d3area"></div>
-<div id="d3area_head"></div>
 
 <br/>
 
-<button onclick="changeFunction()">
-    누르면 2초당 애니메이션으로변화
-</button>
 
 
 <!-- library -->
@@ -59,7 +46,7 @@
 
 <!-- shape -->
 <!--<script src="js/shape/app.js"></script>-->
-<script src="js/shape/stuckyi_quad-0.1.js"></script>
+<script src="js/shape/stuckyi_quad-test.js"></script>
 <!--<script src="js/shape/arc_radius.js"></script>-->
 <!--<script src="js/shape/arc_pie.js"></script>-->
 <!--<script src="js/shape/polygon_basic.js"></script>-->
