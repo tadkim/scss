@@ -16,19 +16,28 @@
             stroke-linejoin: round;
             fill:hsl(50, 85%, 60%);
         }
-
-
-        /* for test */
-        .test-circle{
-            fill:hsla(50, 85%, 60%, 0.3);
-            stroke:yellow;
-
+        path{
+            fill:hsl(50, 85%, 60%);
+            /*fill:red;*/
         }
-
 
     </style>
 </head>
 <body>
+<div id="test-div"></div>
+<svg>
+    <defs>
+        <g id="shape">
+            <rect x="50" y="50" width="50" height="50" />
+            <circle cx="50" cy="50" r="50" />
+        </g>
+    </defs>
+
+    <!--<use xlink:href="#shape" x="50" y="50" />-->
+    <!--<use xlink:href="#shape" x="200" y="50" />-->
+
+</svg>
+
 <h1>Break뷁</h1>
 <p>svg size: 1280x960</p>
 <div id="d3area"></div>
@@ -50,7 +59,7 @@
 
 <!-- shape -->
 <!--<script src="js/shape/app.js"></script>-->
-<script src="js/shape/stuckyi_quardic.js.js"></script>
+<script src="js/shape/stuckyi_quad-0.1.js"></script>
 <!--<script src="js/shape/arc_radius.js"></script>-->
 <!--<script src="js/shape/arc_pie.js"></script>-->
 <!--<script src="js/shape/polygon_basic.js"></script>-->
