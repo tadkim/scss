@@ -13,7 +13,7 @@ var initSizes = {
 	mouth :{ w:40, h:20 },
 	mouth_inner :{ w:40, h:10 },
 	eyes:{ outRadius:6, inRadius:2},
-	legs:{ instep:10, leg_length:30 }
+	legs:{ instep:10, leg_length:30, depth:230, legGaps:0.2 }
 };
 
 
@@ -490,13 +490,18 @@ function getFeaturesPos(d, featureName) {
 	// 다리위치 얻기
 	function getLegPos(rw1, rw3, dir){
 		var resultLegPos = {};
-		var criticalmass_leg = 200; //w1, w3모두 200이 넘으면 발동
+		var criticalmass_leg = initSizes.legs.depth; //w1, w3모두 200이 넘으면 발동
+		var legGap = criticalmass_leg * initSizes.legs.legGaps;
+
+
+
+
 		var splitDir = dir.split("_")[1];
 		return (splitDir === "left")? legTypeLeft() : legTypeRight();
 
 		function legTypeLeft(){
 			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
-				resultLegPos.x = a7.x - 10; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.x = a7.x - legGap; //200둘다 넘는 애들에게만 10px 추가 부여
 				resultLegPos.y = Math.abs(a7.y) -10;
 			}else{
 				resultLegPos.x = a7.x;
@@ -507,7 +512,7 @@ function getFeaturesPos(d, featureName) {
 
 		function legTypeRight(){
 			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
-				resultLegPos.x = a9.x +10; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.x = a9.x +legGap; //200둘다 넘는 애들에게만 10px 추가 부여
 				resultLegPos.y = Math.abs(a9.y) -10;
 			}else{
 				resultLegPos.x = a9.x;
@@ -537,6 +542,8 @@ function getPeanutByData(d) {
 	//Set w2 value's Range (based on w1, w3)
 	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
 	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+
+
 
 	//Variable Assignment for quadratic bezier curve point (x, y) ***
 	var t0 = a + b,
