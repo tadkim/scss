@@ -221,7 +221,7 @@ function drawTheme(datarow) {
 				return "translate(0," + (-initSizes.contentsArea.w/6) + ")";
 			});
 
-		console.log(pathMouth[0][0].getBBox());
+		// console.log(pathMouth[0][0].getBBox());
 
 	}
 
@@ -475,15 +475,15 @@ function getFeaturesPos(d, featureName) {
 		return (s_type === "sheet2")? typeSheet2() : typeSheet3();
 
 		function typeSheet2(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return Math.abs(a6.y); } //w1 < w3 : bottom
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return Math.abs(a4.y); } //w1 == w3  :middle
-			else { return Math.abs(a2.y); } // w1 >w3 : top
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return a6.y; } //w1 < w3 : bottom
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a4.y; } //w1 == w3  :middle
+			else { return a2.y; } // w1 >w3 : top
 		}
 
 		function typeSheet3(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return Math.abs(a6.y); } //w1 < w3 : bottom
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return Math.abs(a2.y); } //w1 == w3 : top
-			else { return Math.abs(a2.y); } //w1 > w3 : top
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return a6.y; } //w1 < w3 : bottom
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a2.y; } //w1 == w3 : top
+			else { return a2.y; } //w1 > w3 : top
 		}
 	}
 
