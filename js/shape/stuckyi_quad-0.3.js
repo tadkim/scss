@@ -12,7 +12,7 @@ var initSizes = {
 	contentsArea : {w:280, h:280},
 	mouth :{ w:40, h:20 },
 	mouth_inner :{ w:40, h:10 },
-	eyes:{ outRadius:10, inRadius:4}
+	eyes:{ outRadius:6, inRadius:2}
 };
 
 
@@ -89,10 +89,6 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 		d.r_longwinded = +d.r_longwinded;
 		d.r_fascinating = +d.r_fascinating;
 
-
-
-
-
 		d.posVal = +d.posVal; //전체 투표 중 긍정 투표 수(개)
 		d.negVal = +d.negVal; //전체 투표 중 부정 투표 수(개)
 
@@ -103,6 +99,12 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 		d.dur_sec = +d.dur_sec; //총 영상의 길이(초)
 		//period
 		d.period = +d.period; //기간(월, 2015.05 기준)
+
+		//shape - random a,b ratio value.
+		d.randomA = Math.floor(Math.random()*3)+1;
+		d.randomB = Math.floor(Math.random()*3)+1;
+
+
 
 	});
 	//Scale set ============================================================
@@ -135,8 +137,10 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 function drawTheme(datarow) {
 	var dataname = datarow;
 
-
+	//Call Theme functions -----------------------------------------------------------
 	drawTheme_case2(dataname);
+
+	//Setting Theme functions -------------------------------------------------------
 	function drawTheme_case1(d_nm) {
 
 		//d3.area()활용 -----------------------------------------------------------------
@@ -229,6 +233,7 @@ function drawTheme(datarow) {
 		console.log(pathMouth[0][0].getBBox());
 
 	}
+
 	function drawTheme_case2(d_nm) {
 
 		//d3.area()활용 -----------------------------------------------------------------
@@ -240,44 +245,30 @@ function drawTheme(datarow) {
 			.attr("width", initSizes.contentsArea.w).attr("height", initSizes.contentsArea.h)
 			.attr("stroke", "aqua").attr("fill", "none");
 
-
+		//Center Point로 이동하기 위한 <g> ==========================================
 		var g_center = g_area.append("g").attr("transform", "translate(140,140)");
 
 		//몸체 ===============================================================
 		var bodyEl = g_center.append("path")
-			.attr("d", function (d) {
-				// return getPeanut( height1,  height2,  width1,  width2,  width3,  randomA,  randomB );
-				return getPeanut(d);
+			.attr("class", function(d){ return getClassBySheet(d); })
+			.attr("d", function (d) { return getPeanutByData(d); })
+			.on("mouseover", function(d){
+				console.log(getFeaturesLog(d, "eyes"));
 			});
-
-
-
 
 
 		//눈 ===============================================================
 		var eyes_left = g_center.append("circle")
 			.attr("r", initSizes.eyes.outRadius)
-			.attr("fill", "red")
+			.attr("fill", "white")
 			.attr("class", "eyes_left")
 			.attr("transform", function(d){
-				// return getPeanut(200, 100, 150, 30, 90, 1, 1);
-				var height1 =  scales.t.h1(d.r_informative);
-				var height2 = 200-(scales.t.h1(d.r_informative));
-				var width1= scales.t.w1(d.r_beautiful);
-				var width2;
-				var width3= scales.t.w3(d.r_courageous);
 				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
-				// var currentType = getTypeByratio(width1, width3);
-
-
-
-
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				var eyesX = -(initSizes.eyes.outRadius+ eyesGap);
+				var eyesY = getFeaturesPos(d, "eyes");
 
-
-
-				return "translate(" +  eyesX + "," +  (-initSizes.contentsArea.w/4) + ")";
+				return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
 
@@ -286,26 +277,42 @@ function drawTheme(datarow) {
 			.attr("fill", "white")
 			.attr("class", "eyes_right")
 			.attr("transform", function(d){
-				return "translate(" +  ( scales.eyes.r(d.Beautiful)) + "," +  (-initSizes.contentsArea.w/4) + ")";
+				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
+				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
+				var eyesX = initSizes.eyes.outRadius+ eyesGap;
+				var eyesY = getFeaturesPos(d, "eyes");
+
+				return "translate(" +  eyesX + "," + eyesY + ")";
+			});
+
+
+		//Pupil(눈동자) =============================================================
+		var pupil_left = g_center.append("circle")
+			.attr("r", initSizes.eyes.inRadius)
+			.attr("fill", "black")
+			.attr("transform", function(d){
+				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
+				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
+				var eyesX =-( initSizes.eyes.outRadius+ eyesGap);
+				var eyesY = getFeaturesPos(d, "eyes");
+
+				return "translate(" +  eyesX + "," + eyesY + ")";
+			});
+
+		var pupil_right = g_center.append("circle")
+			.attr("r", initSizes.eyes.inRadius)
+			.attr("fill", "black")
+			.attr("transform", function(d){
+				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
+				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
+				var eyesX = initSizes.eyes.outRadius+ eyesGap;
+				var eyesY = getFeaturesPos(d, "eyes");
+
+				return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
 
 /*
-		//Pupil(눈동자) =============================================================
-		var pupil_left = g_center.append("circle")
-			.attr("r", function(d){ return scales.pupil.r(d.Beautiful); })
-			.attr("fill", "black")
-			.attr("transform", function(d){
-				return "translate(" + (- scales.eyes.r(d.Beautiful)) + "," + (-initSizes.contentsArea.w/4) + ")";
-			});
-
-		var pupil_right = g_center.append("circle")
-			.attr("r", function(d){ return scales.pupil.r(d.Beautiful); })
-			.attr("fill", "black")
-			.attr("transform", function(d){
-				return "translate(" +  ( scales.eyes.r(d.Beautiful)) + "," +  (-initSizes.contentsArea.w/4) + ")";
-			});
-
 //Mouth(입) =============================================================
 		var pathMouth = g_center.append("rect")
 			.attr("width", initSizes.mouth.w)
@@ -340,82 +347,6 @@ function drawTheme(datarow) {
 		// console.log(pathMouth[0][0].getBBox());
 
 	}
-
-}
-//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
-function getTypeByRatio(a, b){
-	var percents = a/b*100;
-	var resultY;
-	if( ( 0 <= percents) && ( percents < 80 ) ){ return "frameA"; }
-	else if( ( 80 <= percents ) && ( percents < 120) ) {  return "frameB"; }
-	else { return "frameC"; }
-}
-
-
-//getPeanut 을 data만 인수로 받아서 진행한다.
-function getPeanutByData(d) {
-	// return getPeanut(200, 100, 150, 30, 90, 1, 1);
-	var h1 =  scales.t.h1(d.r_informative);
-	var h2 = 200-(scales.t.h1(d.r_informative));
-	var w1= scales.t.w1(d.r_beautiful);
-	var w2;
-	var w3= scales.t.w3(d.r_courageous);
-	var a = Math.floor((Math.random() * 3) + 1);
-	var b = Math.floor((Math.random() * 3) + 1);
-
-
-	if(width1 < width3){
-		scales.t.w2.range([1, width1]);
-		w2 = scales.t.w2(d.r_inspiring);
-	}
-	else {
-		scales.t.w2.range([1, width3 ]);
-		w2 = scales.t.w2(d.r_inspiring);
-	}
-
-
-	var t0 = a + b;
-	var t1 = a + 2 * b;
-	var t2 = 2 * a + b;
-	var t3 = 2 * (a + b);
-	var t4 = w1 - w2;
-	var t5 = w3 - w2;
-
-	//compute quadratic bezier curve point (x, y)
-	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },
-		a2 = { x: -(w1)/2, y:-(h1)/2 },
-		a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },
-		a4 = { x: -w2/2, y:0},
-		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3},
-		a6 = { x: -w3/2, y:h2/2},
-		a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },
-		a8 = { x:0, y:h2 },
-		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},
-		a10 = { x: w3/2, y:h2/2 },
-		a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},
-		a12 = { x: w2/2, y:0 },
-		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },
-		a14 = { x: w1/2, y: -h1/2 },
-		a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },
-		a16 = { x: 0, y:-h1};
-
-
-
-		//MoveTo
-		var MV = "M" + a1.x + "," + a1.y;
-
-		//Quadratics
-		var Q1 = " Q " + a2.x + "," + a2.y + " " +  a3.x + "," + a3.y ;
-		var Q2 = " Q " +  a4.x + "," + a4.y + " " +  a5.x + "," + a5.y ;
-		var Q3 = " Q " +  a6.x + "," + a6.y + " " +  a7.x + "," + a7.y ;
-		var Q4 = " Q " +  a8.x + "," + a8.y + " " +  a9.x + "," + a9.y ;
-		var Q5 = " Q " +  a10.x + "," + a10.y + " " +  a11.x + "," + a11.y ;
-		var Q6 = " Q " +  a12.x + "," + a12.y + " " +  a13.x + "," + a13.y ;
-		var Q7 = " Q " +  a14.x + "," + a14.y + " " +  a15.x + "," + a15.y ;
-		var Q8 = " Q " +  a16.x + "," + a16.y + " " +  a1.x + "," + a1.y ;
-
-		//return values
-		return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 
 }
 
@@ -466,6 +397,145 @@ function getPeanut(h1, h2, w1, w2, w3, a, b){
 	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 }
 
+
+function getClassBySheet(d){
+
+	var h1 =  scales.t.h1(d.r_informative);
+	var h2 = 200-(scales.t.h1(d.r_informative));
+
+	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
+
+	return (checkSheetTypes === "sheet2")? "sheetType2" : "sheetType3";
+}
+
+//눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
+function getFeaturesPos(d, featureName) {
+	var resultPosValues; //최종 리턴 변수
+
+	var h1 =  scales.t.h1(d.r_informative),
+		h2 = 200-(scales.t.h1(d.r_informative)),
+		w1= scales.t.w1(d.r_beautiful),
+		w2,
+		w3= scales.t.w3(d.r_courageous),
+		a = d.randomA, b = d.randomB;
+
+	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
+
+
+
+	//Set w2 value's Range (based on w1, w3)
+	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
+	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+
+	//Variable Assignment for quadratic bezier curve point (x, y) ***
+	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
+
+	//compute quadratic bezier curve point (x, y)
+	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
+		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
+		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
+		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
+
+	//feature 이름에 따라 계산식을 다르게 부여(신체부위마다 위치계산법이 다르기 때문)
+	switch(featureName){
+		case "eyes":
+			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			break;
+		default:
+			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			break;
+	}
+	return resultPosValues; //최종 return value.
+
+
+
+
+	//get Eye Position Y
+	function getEyePosY(ratio_w1, ratio_w3, s_type){
+		var percents = ratio_w1/ratio_w3*100;
+		//w1 = w3 이면 100
+		//w1 > w3 이면 100보다 큰 수
+		//w1 < w3 이면 100보다 작은 수
+
+		return (s_type === "sheet2")? typeSheet2() : typeSheet3();
+
+		function typeSheet2(){
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return a4.y; }
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a3.y; }
+			else { return a2.y; }
+		}
+
+		function typeSheet3(){
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return a4.y; }
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a2.y; }
+			else { return a2.y; }
+		}
+
+	}
+
+} // END - getFeaturesPos()
+
+
+
+//getPeanut 을 data만 인수로 받아서 진행한다.
+function getPeanutByData(d) {
+	// return getPeanut(200, 100, 150, 30, 90, 1, 1);
+	var h1 =  scales.t.h1(d.r_informative);
+	var h2 = 200-(scales.t.h1(d.r_informative));
+	var w1= scales.t.w1(d.r_beautiful);
+	var w2;
+	var w3= scales.t.w3(d.r_courageous);
+	var a = d.randomA;
+	var b = d.randomB;
+
+	//Set w2 value's Range (based on w1, w3)
+	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
+	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+
+	//Variable Assignment for quadratic bezier curve point (x, y) ***
+	var t0 = a + b,
+		t1 = a + 2 * b,
+		t2 = 2 * a + b,
+		t3 = 2 * (a + b),
+		t4 = w1 - w2,
+		t5 = w3 - w2;
+
+	//compute quadratic bezier curve point (x, y)
+	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },
+		a2 = { x: -(w1)/2, y:-(h1)/2 },
+		a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },
+		a4 = { x: -w2/2, y:0},
+		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3},
+		a6 = { x: -w3/2, y:h2/2},
+		a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },
+		a8 = { x:0, y:h2 },
+		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},
+		a10 = { x: w3/2, y:h2/2 },
+		a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},
+		a12 = { x: w2/2, y:0 },
+		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },
+		a14 = { x: w1/2, y: -h1/2 },
+		a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },
+		a16 = { x: 0, y:-h1};
+
+	//MoveTo
+	var MV = "M" + a1.x + "," + a1.y;
+
+	//Quadratics
+	var Q1 = " Q " + a2.x + "," + a2.y + " " +  a3.x + "," + a3.y ;
+	var Q2 = " Q " +  a4.x + "," + a4.y + " " +  a5.x + "," + a5.y ;
+	var Q3 = " Q " +  a6.x + "," + a6.y + " " +  a7.x + "," + a7.y ;
+	var Q4 = " Q " +  a8.x + "," + a8.y + " " +  a9.x + "," + a9.y ;
+	var Q5 = " Q " +  a10.x + "," + a10.y + " " +  a11.x + "," + a11.y ;
+	var Q6 = " Q " +  a12.x + "," + a12.y + " " +  a13.x + "," + a13.y ;
+	var Q7 = " Q " +  a14.x + "," + a14.y + " " +  a15.x + "," + a15.y ;
+	var Q8 = " Q " +  a16.x + "," + a16.y + " " +  a1.x + "," + a1.y ;
+
+	//return values
+	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
+
+}
+
 // 콘텐츠 별 위치 결정 함수  -----------------------------------------------------------------
 function getPositionByIndex(){
 	indexCounter = indexCounter+1;
@@ -495,6 +565,7 @@ function getPositionByIndex(){
 	}
 	return resultPos;
 }
+
 // 기울기 계산 후 Quadratic 객체 생성함수  --------------------------------------------------
 function computeTilt(width, height, middleWidth){
 	//size attributes
@@ -547,3 +618,111 @@ function rightRoundedRect(x, y, width, height, radius) {
 		+ "h" + (radius - width)
 		+ "z";
 }
+
+
+//test
+
+
+//눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
+function test_getLineY(d) {
+	var resultLinePos = {}; //최종 리턴 변수
+
+	var h1 =  scales.t.h1(d.r_informative),
+		h2 = 200-(scales.t.h1(d.r_informative)),
+		w1= scales.t.w1(d.r_beautiful),
+		w2,
+		w3= scales.t.w3(d.r_courageous),
+		a = d.randomA, b = d.randomB;
+
+	var checkSheetTypes = (h1 > h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
+
+
+
+	//Set w2 value's Range (based on w1, w3)
+	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
+	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+
+	//Variable Assignment for quadratic bezier curve point (x, y) ***
+	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
+
+	//compute quadratic bezier curve point (x, y)
+	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
+		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
+		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
+		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
+
+
+	resultLinePos.a2 = { x:a2.x, y:a2.y };
+	resultLinePos.a3 = { x:a3.x, y:a3.y };
+	resultLinePos.a4 = { x:a4.x, y:a4.y };
+
+	return resultLinePos;
+}
+
+
+//눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
+function getFeaturesLog(d, featureName) {
+	var resultPosValues; //최종 리턴 변수
+
+	var h1 =  scales.t.h1(d.r_informative),
+		h2 = 200-(scales.t.h1(d.r_informative)),
+		w1= scales.t.w1(d.r_beautiful),
+		w2,
+		w3= scales.t.w3(d.r_courageous),
+		a = d.randomA, b = d.randomB;
+
+	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
+
+
+
+	//Set w2 value's Range (based on w1, w3)
+	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
+	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+
+	//Variable Assignment for quadratic bezier curve point (x, y) ***
+	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
+
+	//compute quadratic bezier curve point (x, y)
+	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
+		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
+		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
+		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
+
+	//feature 이름에 따라 계산식을 다르게 부여(신체부위마다 위치계산법이 다르기 때문)
+	switch(featureName){
+		case "eyes":
+			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			break;
+		default:
+			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			break;
+	}
+	return resultPosValues; //최종 return value.
+
+
+
+
+	//get Eye Position Y
+	function getEyePosY(ratio_w1, ratio_w3, s_type){
+		var percents = ratio_w1/ratio_w3*100;
+		//w1 = w3 이면 100
+		//w1 > w3 이면 100보다 큰 수
+		//w1 < w3 이면 100보다 작은 수
+
+		return (s_type === "sheet2")? typeSheet2() : typeSheet3();
+
+		function typeSheet2(){
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return "sheet2(blue), w1 < w3, and set bottom(a4)"; }
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return "sheet2(blue), w1 = w3, and set middle(a3)"; }
+			else { return "sheet2(blue), w1 > w3,  and set top(a2)"; }
+		}
+
+		function typeSheet3(){
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return "sheet3(green), w1 < w3, and set bottom(a4)"; }
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return "sheet3(green), w1 = w3, and set top(a2)"; }
+			else { return "sheet3(green), w1 > w3, and set top(a2)"; }
+		}
+
+	}
+
+} // END - getFeaturesPos()
