@@ -12,7 +12,8 @@ var initSizes = {
 	contentsArea : {w:280, h:280},
 	mouth :{ w:40, h:20 },
 	mouth_inner :{ w:40, h:10 },
-	eyes:{ outRadius:6, inRadius:2}
+	eyes:{ outRadius:6, inRadius:2},
+	legs:{ instep:10, leg_length:30 }
 };
 
 
@@ -52,9 +53,9 @@ var scales = {
 var t = 1,
 	indexCounter=0;
 
-var xPos  = svgMargin.left + characterMargin.left;
-var yPos  = 100;
-var yGap  = 280;
+var xPos  = svgMargin.left + characterMargin.left,
+	yPos  = 100,
+	yGap  = 280;
 
 var svg = d3.select("#d3area").append("svg")
 	.attr("width", svgSize.w).attr("height", svgSize.h)
@@ -64,9 +65,7 @@ var svg = d3.select("#d3area").append("svg")
 //Load Data
 // d3.tsv("data/ted_0.5_test.tsv", function(error, dataset) {
 d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
-	if (error) {
-		console.log("Data Loading ERROR");
-	}
+	if (error) { console.log("Data Loading ERROR"); }
 
 	//type assignment
 	dataset.forEach(function (d) {
@@ -109,28 +108,20 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 	});
 	//Scale set ============================================================
 
-
-
-	//case 2 body  스케일 조정
 	scales.t.h1.domain(d3.extent(dataset, function(d) { return d.r_informative; }));
-
 	scales.t.w1.domain(d3.extent(dataset, function(d) { return d.r_beautiful; }));
 	scales.t.w2.domain(d3.extent(dataset, function(d) { return d.r_inspiring; }));
 	scales.t.w3.domain(d3.extent(dataset, function(d) { return d.r_courageous; }));
 
-
 	scales.detail.eyegap.domain(d3.extent(dataset, function(d) { return d.r_unconvincing; }));
 
-	//데이터 셋 필터링
-	// dataset = dataset.filter(function(element){ return element.Beautiful > 2000; });
 
+	// dataset = dataset.filter(function(element){ return element.Beautiful > 2000; }); //데이터 셋 필터링
 
 	//드로잉 테마 호출
 	drawTheme(dataset);
 
 }); // end d3.tsv()
-
-
 
 
 //여러 버전의 드로잉테마를 하나로 합치기 ---------------------
@@ -248,6 +239,27 @@ function drawTheme(datarow) {
 		//Center Point로 이동하기 위한 <g> ==========================================
 		var g_center = g_area.append("g").attr("transform", "translate(140,140)");
 
+
+		//Legs(다리) =============================================================
+		var leg_left = g_center.append("polyline")
+			.attr("points", function(d){
+				var legs = getFeaturesPos(d, "legs_left");
+				return legs.x + "," + legs.y + " " + legs.x + "," +
+					(legs.y+initSizes.legs.leg_length) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+initSizes.legs.leg_length);
+			})
+			.attr("class", "legs");
+
+
+		var leg_right = g_center.append("polyline")
+			.attr("points", function(d){
+				var legs = getFeaturesPos(d, "legs_right");
+				return legs.x + "," + legs.y + " " + legs.x + "," +
+					(legs.y+initSizes.legs.leg_length) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+initSizes.legs.leg_length);
+			})
+			.attr("class", "legs");
+
+
+
 		//몸체 ===============================================================
 		var bodyEl = g_center.append("path")
 			.attr("class", function(d){ return getClassBySheet(d); })
@@ -262,27 +274,35 @@ function drawTheme(datarow) {
 			.attr("r", initSizes.eyes.outRadius)
 			.attr("fill", "white")
 			.attr("class", "eyes_left")
-			.attr("transform", function(d){
+			.attr("cx", function(d){
 				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				var eyesX = -(initSizes.eyes.outRadius+ eyesGap);
-				var eyesY = getFeaturesPos(d, "eyes");
-
-				return "translate(" +  eyesX + "," + eyesY + ")";
-			});
+				return eyesX;
+				// return "translate(" +  eyesX + "," + eyesY + ")";
+			})
+			.attr("cy", function(d) { return getFeaturesPos(d, "eyes"); });
 
 
 		var eyes_right = g_center.append("circle")
 			.attr("r", initSizes.eyes.outRadius)
 			.attr("fill", "white")
 			.attr("class", "eyes_right")
-			.attr("transform", function(d){
+			.attr("cx", function(d){
 				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				var eyesX = initSizes.eyes.outRadius+ eyesGap;
 				var eyesY = getFeaturesPos(d, "eyes");
-
-				return "translate(" +  eyesX + "," + eyesY + ")";
+				return eyesX;
+				// return "translate(" +  eyesX + "," + eyesY + ")";
+			})
+			.attr("cy", function(d){
+				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
+				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
+				var eyesX = initSizes.eyes.outRadius+ eyesGap;
+				var eyesY = getFeaturesPos(d, "eyes");
+				return eyesY;
+				// return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
 
@@ -312,37 +332,39 @@ function drawTheme(datarow) {
 			});
 
 
-/*
-//Mouth(입) =============================================================
-		var pathMouth = g_center.append("rect")
-			.attr("width", initSizes.mouth.w)
-			.attr("height", function(d){ return scales.mouth.h(d.Jaw_dropping);})
-			.attr("rx", 8).attr("ry", 8)
-			.attr("fill", "#BB2244")
-			.attr("transform", function (d) {
-				return "translate(" + -initSizes.mouth.w/2 + ","  + (-initSizes.mouth.h) + ")";
-			});
-		var pathMouth_inner = g_center.append("rect")
-			.attr("width", initSizes.mouth_inner.w)
-			.attr("height", function(d){ return scales.mouth.h(d.Jaw_dropping)-10;})
-			.attr("rx", 4).attr("ry", 4)
-			.attr("fill", "white")
-			.attr("transform", function (d) {
-				return "translate(" + (-(initSizes.mouth.w)/2)+ ","  + (-initSizes.mouth.h) + ")";
-			});
 
 
-		var nose = g_center.append("rect")
-			.attr("fill", "#CEAB69")
-			.attr("width", function(d){ return scales.nose.w(d.Unconvincing); })
-			.attr("height", 10)
-			.attr("rx", 4).attr("ry", 4)
-			.attr("class", "nose")
-			.attr("transform", function(d){
-				return "translate(0," + (-initSizes.contentsArea.w/6) + ")";
-			});
+		/*
+		//Mouth(입) =============================================================
+				var pathMouth = g_center.append("rect")
+					.attr("width", initSizes.mouth.w)
+					.attr("height", function(d){ return scales.mouth.h(d.Jaw_dropping);})
+					.attr("rx", 8).attr("ry", 8)
+					.attr("fill", "#BB2244")
+					.attr("transform", function (d) {
+						return "translate(" + -initSizes.mouth.w/2 + ","  + (-initSizes.mouth.h) + ")";
+					});
+				var pathMouth_inner = g_center.append("rect")
+					.attr("width", initSizes.mouth_inner.w)
+					.attr("height", function(d){ return scales.mouth.h(d.Jaw_dropping)-10;})
+					.attr("rx", 4).attr("ry", 4)
+					.attr("fill", "white")
+					.attr("transform", function (d) {
+						return "translate(" + (-(initSizes.mouth.w)/2)+ ","  + (-initSizes.mouth.h) + ")";
+					});
 
-			*/
+
+				var nose = g_center.append("rect")
+					.attr("fill", "#CEAB69")
+					.attr("width", function(d){ return scales.nose.w(d.Unconvincing); })
+					.attr("height", 10)
+					.attr("rx", 4).attr("ry", 4)
+					.attr("class", "nose")
+					.attr("transform", function(d){
+						return "translate(0," + (-initSizes.contentsArea.w/6) + ")";
+					});
+
+					*/
 
 		// console.log(pathMouth[0][0].getBBox());
 
@@ -397,7 +419,6 @@ function getPeanut(h1, h2, w1, w2, w3, a, b){
 	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 }
 
-
 function getClassBySheet(d){
 
 	var h1 =  scales.t.h1(d.r_informative);
@@ -421,8 +442,6 @@ function getFeaturesPos(d, featureName) {
 
 	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
 
-
-
 	//Set w2 value's Range (based on w1, w3)
 	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
 	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
@@ -436,10 +455,21 @@ function getFeaturesPos(d, featureName) {
 		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
 		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
 
+
+
+
+
 	//feature 이름에 따라 계산식을 다르게 부여(신체부위마다 위치계산법이 다르기 때문)
 	switch(featureName){
 		case "eyes":
 			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+
+			break;
+		case "legs_left":
+			resultPosValues = getLegPos(w1,w3, featureName);
+			break;
+		case "legs_right":
+			resultPosValues = getLegPos(w1,w3, featureName);
 			break;
 		default:
 			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
@@ -450,32 +480,59 @@ function getFeaturesPos(d, featureName) {
 
 
 
-	//get Eye Position Y
+	//눈 위치 얻기
 	function getEyePosY(ratio_w1, ratio_w3, s_type){
-		var percents = ratio_w1/ratio_w3*100;
-		//w1 = w3 이면 100
-		//w1 > w3 이면 100보다 큰 수
-		//w1 < w3 이면 100보다 작은 수
-
+		var percents = ratio_w1/ratio_w3*100; //w1 = w3 이면 100 , w1 > w3 이면 100보다 큰 수, w1 < w3 이면 100보다 작은 수
 		return (s_type === "sheet2")? typeSheet2() : typeSheet3();
 
 		function typeSheet2(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return a4.y; }
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a3.y; }
-			else { return a2.y; }
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return Math.abs(a6.y); } //w1 < w3 : bottom
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return Math.abs(a4.y); } //w1 == w3  :middle
+			else { return Math.abs(a2.y); } // w1 >w3 : top
 		}
 
 		function typeSheet3(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return a4.y; }
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a2.y; }
-			else { return a2.y; }
+			if( ( 0 <= percents) && ( percents < 80 ) ){ return Math.abs(a6.y); } //w1 < w3 : bottom
+			else if( ( 80 <= percents ) && ( percents < 120) ) {  return Math.abs(a2.y); } //w1 == w3 : top
+			else { return Math.abs(a2.y); } //w1 > w3 : top
+		}
+	}
+
+	// 다리위치 얻기
+	function getLegPos(rw1, rw3, dir){
+		var resultLegPos = {};
+		var criticalmass_leg = 200; //w1, w3모두 200이 넘으면 발동
+		var splitDir = dir.split("_")[1];
+		return (splitDir === "left")? legTypeLeft() : legTypeRight();
+
+		function legTypeLeft(){
+			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
+				resultLegPos.x = a7.x - 10; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.y = Math.abs(a7.y) -10;
+			}else{
+				resultLegPos.x = a7.x;
+				resultLegPos.y = Math.abs(a7.y) -10;
+			}
+			return resultLegPos;
 		}
 
+		function legTypeRight(){
+			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
+				resultLegPos.x = a9.x +10; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.y = Math.abs(a9.y) -10;
+			}else{
+				resultLegPos.x = a9.x;
+				resultLegPos.y = Math.abs(a9.y) -10;
+			}
+			return resultLegPos;
+		}
+
+
+
+		return resultLegPos;
 	}
 
 } // END - getFeaturesPos()
-
-
 
 //getPeanut 을 data만 인수로 받아서 진행한다.
 function getPeanutByData(d) {
@@ -607,58 +664,6 @@ function computeTilt(width, height, middleWidth){
 	//return values
 	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 }
-
-
-function rightRoundedRect(x, y, width, height, radius) {
-	return "M" + x + "," + y
-		+ "h" + (width - radius)
-		+ "a" + radius + "," + radius + " 1 0 1 " + radius + "," + radius
-		+ "v" + (height - 2 * radius)
-		+ "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
-		+ "h" + (radius - width)
-		+ "z";
-}
-
-
-//test
-
-
-//눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
-function test_getLineY(d) {
-	var resultLinePos = {}; //최종 리턴 변수
-
-	var h1 =  scales.t.h1(d.r_informative),
-		h2 = 200-(scales.t.h1(d.r_informative)),
-		w1= scales.t.w1(d.r_beautiful),
-		w2,
-		w3= scales.t.w3(d.r_courageous),
-		a = d.randomA, b = d.randomB;
-
-	var checkSheetTypes = (h1 > h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
-
-
-
-	//Set w2 value's Range (based on w1, w3)
-	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
-	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
-
-	//Variable Assignment for quadratic bezier curve point (x, y) ***
-	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
-
-	//compute quadratic bezier curve point (x, y)
-	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
-		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
-		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
-		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
-
-
-	resultLinePos.a2 = { x:a2.x, y:a2.y };
-	resultLinePos.a3 = { x:a3.x, y:a3.y };
-	resultLinePos.a4 = { x:a4.x, y:a4.y };
-
-	return resultLinePos;
-}
-
 
 //눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
 function getFeaturesLog(d, featureName) {

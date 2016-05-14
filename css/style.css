@@ -28,4 +28,11 @@ path {
 .sheetType3 {
   fill: #3dbd5d; }
 
+.legs {
+  stroke: black;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  z-index: -10;
+  fill: none; }
+
 /*# sourceMappingURL=style.css.map */
