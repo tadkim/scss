@@ -59,3 +59,17 @@ path{
   z-index:-10;
   fill:none;
 }
+
+.arms{
+  stroke: #c2ead6;
+  stroke-width:6px;
+  stroke-linecap:round;
+  fill:none;
+}
+.arms_right{
+  stroke: hsl(260, 40%, 60%);
+  stroke-width:5px;
+  stroke-linecap:round;
+  fill:none;
+  transform: scaleX(-1);
+}

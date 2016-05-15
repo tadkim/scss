@@ -35,4 +35,17 @@ path {
   z-index: -10;
   fill: none; }
 
+.arms {
+  stroke: #c2ead6;
+  stroke-width: 6px;
+  stroke-linecap: round;
+  fill: none; }
+
+.arms_right {
+  stroke: #8b70c2;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  fill: none;
+  transform: scaleX(-1); }
+
 /*# sourceMappingURL=style.css.map */
