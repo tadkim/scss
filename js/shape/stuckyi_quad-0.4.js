@@ -96,6 +96,21 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 		//period
 		d.period = +d.period; //기간(월, 2015.05 기준)
 
+
+
+
+
+	});
+	//Scale set ============================================================
+	scales.t.h1.domain(d3.extent(dataset, function(d) { return d.r_informative; }));
+	scales.t.w1.domain(d3.extent(dataset, function(d) { return d.r_beautiful; }));
+	scales.t.w2.domain(d3.extent(dataset, function(d) { return d.r_inspiring; }));
+	scales.t.w3.domain(d3.extent(dataset, function(d) { return d.r_courageous; }));
+
+	scales.detail.eyegap.domain(d3.extent(dataset, function(d) { return d.r_unconvincing; }));
+
+	//SV (Shape Variables) Define==============================================
+	dataset.forEach(function(d){
 		//shape - random a,b ratio value.
 		d.h1 =  scales.t.h1(d.r_informative),
 		d.h2 = 200-(scales.t.h1(d.r_informative)),
@@ -105,26 +120,54 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 		d.a = Math.floor(Math.random()*3)+1,
 		d.b = Math.floor(Math.random()*3)+1;
 
-		
+		d.sheetType= (d.h1 < d.h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입
+
 		//Set w2 value's Range (based on w1, w3)
-		if(d.w1 < d.w3){ scales.t.w2.range([1, w1]); d.w2 = scales.t.w2(d.r_inspiring); }
-		else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+		if(d.w1 < d.w3){
+			scales.t.w2.range([1, d.w1]);
+			d.w2 = scales.t.w2(d.r_inspiring);
+		} else {
+			scales.t.w2.range([1, d.w3 ]);
+			d.w2 = scales.t.w2(d.r_inspiring);
+		}
+
+
+
+		//Variable Assignment for quadratic bezier curve point (x, y) ***
+		d.t0 = d.a + d.b,
+		d.t1 = d.a + 2 * d.b,
+		d.t2 = 2 * d.a + d.b,
+		d.t3 = 2 * (d.a + d.b),
+		d.t4 = d.w1 - d.w2,
+		d.t5 = d.w3 - d.w2;
+
+
+
+		//compute quadratic bezier curve point (x, y)
+		d.a1  = { x: -( d.b*d.w1)/d.t3 , y:-(d.t2*d.h1)/d.t3 },
+		d.a2 = { x: -(d.w1)/2, y:-(d.h1)/2 },
+		d.a3 = { x: -(d.w2*d.t0+d.a*d.t4)/d.t3, y: -(d.h1*d.a)/d.t3 },
+		d.a4 = { x: -d.w2/2, y:0},
+		d.a5 = { x: -(d.w2*d.t0+d.t5*d.b)/d.t3, y: (d.b*d.h2)/d.t3},
+		d.a6 = { x: -d.w3/2, y:d.h2/2},
+		d.a7 = { x: -(d.a*d.w3)/d.t3, y:(d.t1*d.h2)/d.t3 },
+		d.a8 = { x:0, y:d.h2 },
+	 	d.a9 = { x: (d.a*d.w3)/d.t3, y: (d.t1*d.h2)/d.t3},
+		d.a10 = { x: d.w3/2, y:d.h2/2 },
+		d.a11 = { x: (d.w2*d.t0+d.t5*d.b)/d.t3, y:(d.b*d.h2)/d.t3},
+		d.a12 = { x:d.w2/2, y:0 },
+		d.a13 = { x: (d.w2*d.t0+d.a*d.t4)/d.t3, y:-(d.h1*d.a)/d.t3 },
+		d.a14 = { x: d.w1/2, y: -d.h1/2 },
+		d.a15 = { x: d.b*d.w1/d.t3, y: -(d.t2*d.h1)/d.t3 },
+		d.a16 = { x: 0, y:-d.h1};
+
+
+
 
 		d.randomA = Math.floor(Math.random()*3)+1;
 		d.randomB = Math.floor(Math.random()*3)+1;
 
-
-
-
 	});
-	//Scale set ============================================================
-
-	scales.t.h1.domain(d3.extent(dataset, function(d) { return d.r_informative; }));
-	scales.t.w1.domain(d3.extent(dataset, function(d) { return d.r_beautiful; }));
-	scales.t.w2.domain(d3.extent(dataset, function(d) { return d.r_inspiring; }));
-	scales.t.w3.domain(d3.extent(dataset, function(d) { return d.r_courageous; }));
-
-	scales.detail.eyegap.domain(d3.extent(dataset, function(d) { return d.r_unconvincing; }));
 
 
 	// dataset = dataset.filter(function(element){ return element.Beautiful > 2000; }); //데이터 셋 필터링
@@ -309,48 +352,46 @@ function drawTheme(datarow) {
 function getFeaturesPos(d, featureName) {
 	var resultPosValues; //최종 리턴 변수
 
-	var h1 =  scales.t.h1(d.r_informative), h2 = 200-(scales.t.h1(d.r_informative)),  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
-	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
+	// var h1 =  scales.t.h1(d.r_informative), h2 = 200-(scales.t.h1(d.r_informative)),  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
 
-	//Set w2 value's Range (based on w1, w3)
-	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
-	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
+	// var h1 =  d.h1, h2 = 200-d.h1,  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
+
+
+	var checkSheetTypes = d.sheetType;
+
+
 
 	//Variable Assignment for quadratic bezier curve point (x, y) ***
-	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
+	// var t0 = d.a + d.b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
 
 	//compute quadratic bezier curve point (x, y)
+	/*
 	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
 		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
 		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
 		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
+		*/
 
 
 	//feature 이름에 따라 계산식을 다르게 부여(신체부위마다 위치계산법이 다르기 때문)
 	switch(featureName){
 		case "eyes":
-			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			resultPosValues = getEyePosY(d);
 			break;
 		case "legs_left":
-			resultPosValues = getLegPos(w1,w3, checkSheetTypes, featureName);
+			resultPosValues = getLegPos(d, "legs_left");
 			break;
 		case "legs_right":
-			resultPosValues = getLegPos(w1,w3, checkSheetTypes, featureName);
+			resultPosValues = getLegPos(d, "legs_right");
 			break;
 		case "arms_left":
-			resultPosValues = getArmPos_left(w1,w3, checkSheetTypes);
+			resultPosValues = getArmPos_left(d);
 			break;
 		case "arms_right":
-			resultPosValues = getArmPos_right(w1,w3, checkSheetTypes);
-			break;
-		case "arms_m_right":
-			resultPosValues = getArmPos_m_right(w1,w3, checkSheetTypes);
-			break;
-		case "arms_m_left":
-			resultPosValues = getArmPos_m_left(w1,w3, checkSheetTypes);
+			resultPosValues = getArmPos_right(d);
 			break;
 		default:
-			resultPosValues = getEyePosY(w1,w3, checkSheetTypes);
+			resultPosValues = getEyePosY(d);
 			break;
 	}
 	return resultPosValues; //최종 return value.
@@ -358,35 +399,37 @@ function getFeaturesPos(d, featureName) {
 
 
 	//눈 위치 얻기
-	function getEyePosY(ratio_w1, ratio_w3, s_type){
-		var percents = ratio_w1/ratio_w3*100; //w1 = w3 이면 100 , w1 > w3 이면 100보다 큰 수, w1 < w3 이면 100보다 작은 수
-		return (s_type === "sheet2")? typeSheet2() : typeSheet3();
+	function getEyePosY(d){
+		var typeByPer= getRatio(d.w1, d.w3);
+		return (d.sheetType === "sheet2")? typeSheet2() : typeSheet3();
 
 		function typeSheet2(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return a6.y; } //w1 < w3 : bottom
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a4.y; } //w1 == w3  :middle
-			else { return a2.y; } // w1 >w3 : top
+			if(typeByPer === "typeA"){ return d.a4.y; } //w1 == w3  :middle
+			if(typeByPer === "typeB"){ return d.a2.y; } // w1 >w3 : top
+			if(typeByPer === "typeC"){ return d.a6.y; } // w1 <w3 : bottom
 		}
 		function typeSheet3(){
-			if( ( 0 <= percents) && ( percents < 80 ) ){ return a6.y; } //w1 < w3 : bottom
-			else if( ( 80 <= percents ) && ( percents < 120) ) {  return a2.y; } //w1 == w3 : top
-			else { return a2.y; } //w1 > w3 : top
+			if(typeByPer === "typeA"){ return d.a2.y; } //w1 == w3  :top
+			if(typeByPer === "typeB"){ return d.a2.y; } // w1 >w3 : top
+			if(typeByPer === "typeC"){ return d.a6.y; } // w1 <w3 : bottom
 		}
 	}
 
 
 
 	// 다리위치 얻기
-	function getLegPos(rw1, rw3, s_types, dir){
-		var resultLegPos = {};
+	function getLegPos(d, dir){
+	// function getLegPos(rw1, rw3, s_types, dir){
 
-		var checkSheeType = s_types; //"sheetA"
-		var typeByPercent = getRatio(rw1, rw3); //"typeA"
+		var resultLegPos = {};
+		var checkSheeType = d.sheetType; //"sheetA"
+		var typeByPer = getRatio(d.w1, d.w3); //"typeA"
 
 		//다리길이 설정
 		resultLegPos.length = initSizes.legs.leg_length ; //default : 30
-		if( (checkSheeType === "sheet2") && (typeByPercent === "typeC") ) { resultLegPos.length = 50; }
-		if( (checkSheeType === "sheet3") && (typeByPercent === "typeC") ) { resultLegPos.length = 50; }
+
+		if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.length = 50; }
+		if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.length = 50; }
 
 		var criticalmass_leg = initSizes.legs.depth; //w1, w3모두 200이 넘으면 발동
 		var critical_w2 = initSizes.legs.crt_w3; // 엉덩이가 기준값 초과시 다리위치를 좁히기 위함(a7, a9 기준이라서)
@@ -396,44 +439,44 @@ function getFeaturesPos(d, featureName) {
 		return (splitDir === "left")? legTypeLeft() : legTypeRight();
 
 		function legTypeLeft(){
-			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
-				resultLegPos.x = a7.x - legGap; //200둘다 넘는 애들에게만 10px 추가 부여
-				resultLegPos.y = Math.abs(a7.y) -10;
+			if( (d.w1 > criticalmass_leg ) && (d.w3 > criticalmass_leg) ){
+				resultLegPos.x = d.a7.x - legGap; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.y = Math.abs(d.a7.y) -10;
 			}else{
 				// resultLegPos.x = a7.x;
 				// resultLegPos.y = Math.abs(a7.y) -10;
-				resultLegPos.x = a7.x;
-				resultLegPos.y = Math.abs(a7.y) -10;
-				if( rw3 >120 ){ resultLegPos.x = a7.x + 4; }
-				if( rw3 >150 ){ resultLegPos.x = a7.x + 8; }
-				if( rw3 >180 ){ resultLegPos.x = a7.x + 12; }
-				if( rw3 > 200 ){ resultLegPos.x = a7.x + 18; }
-				if( rw3 > 230 ){ resultLegPos.x = a7.x + 28; }
+				resultLegPos.x = d.a7.x;
+				resultLegPos.y = Math.abs(d.a7.y) -10;
+				if( d.w3 >120 ){ resultLegPos.x = d.a7.x + 4; }
+				if( d.w3 >150 ){ resultLegPos.x = d.a7.x + 8; }
+				if( d.w3 >180 ){ resultLegPos.x = d.a7.x + 12; }
+				if( d.w3 > 200 ){ resultLegPos.x = d.a7.x + 18; }
+				if( d.w3 > 230 ){ resultLegPos.x = d.a7.x + 28; }
 
 
 				// 눈 아래달린 애들이면 다 무시하고 가운데에 다리 모으기
-				if( (checkSheeType === "sheet2") && (typeByPercent === "typeC") ) { resultLegPos.x = 10; }
-				if( (checkSheeType === "sheet3") && (typeByPercent === "typeC") ) { resultLegPos.x = 10; }
+				if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.x = 10; }
+				if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.x = 10; }
 			}
 			return resultLegPos;
 		}
 
 		function legTypeRight(){
-			if( (rw1 > criticalmass_leg ) && (rw3 > criticalmass_leg) ){
-				resultLegPos.x = a9.x +legGap; //200둘다 넘는 애들에게만 10px 추가 부여
-				resultLegPos.y = Math.abs(a9.y) -10;
+			if( (d.w1 > criticalmass_leg ) && (d.w3 > criticalmass_leg) ){
+				resultLegPos.x = d.a9.x +legGap; //200둘다 넘는 애들에게만 10px 추가 부여
+				resultLegPos.y = Math.abs(d.a9.y) -10;
 			} else{
-				resultLegPos.x = a9.x;
-				resultLegPos.y = Math.abs(a9.y) -10;
-				if( rw3 >120 ){ resultLegPos.x = a9.x -4; } //w3 150초과시 -4px
-				if( rw3 >150 ){ resultLegPos.x = a9.x -8; } //w3 150초과시 -4px
-				if( rw3 >180 ){ resultLegPos.x = a9.x - 12; } //w3 180초과시 -12px
-				if( rw3 > 200 ){ resultLegPos.x = a9.x -18; } //w3 200 초과시 -18px
-				if( rw3 > 230 ){ resultLegPos.x = a9.x -28; } //w3 200 초과시 -18px
+				resultLegPos.x = d.a9.x;
+				resultLegPos.y = Math.abs(d.a9.y) -10;
+				if( d.w3 >120 ){ resultLegPos.x = d.a9.x -4; } //w3 150초과시 -4px
+				if( d.w3 >150 ){ resultLegPos.x = d.a9.x -8; } //w3 150초과시 -4px
+				if( d.w3 >180 ){ resultLegPos.x = d.a9.x - 12; } //w3 180초과시 -12px
+				if( d.w3 > 200 ){ resultLegPos.x = d.a9.x -18; } //w3 200 초과시 -18px
+				if( d.w3 > 230 ){ resultLegPos.x = d.a9.x -28; } //w3 200 초과시 -18px
 
 				// 눈 아래달린 애들이면 다 무시하고 가운데에 다리 모으기
-				if( (checkSheeType === "sheet2") && (typeByPercent === "typeC") ) { resultLegPos.x = -10; }
-				if( (checkSheeType === "sheet3") && (typeByPercent === "typeC") ) { resultLegPos.x = -10; }
+				if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.x = -10; }
+				if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.x = -10; }
 			}
 			return resultLegPos;
 		}
@@ -443,149 +486,122 @@ function getFeaturesPos(d, featureName) {
 
 
 	//오른손
-	function getArmPos_right(aw1, aw3, a_type){
+	function getArmPos_right(d){
 		var resultArmpos = {};
-		return (a_type === "sheet2")? typeSheet2_arm() : typeSheet3_arm();
+		return (d.sheetType === "sheet2")? typeSheet2_arm() : typeSheet3_arm();
 
 		function typeSheet2_arm(){
-			var typeByPercent = getRatio(aw1, aw3); //"typeA"
-			switch(typeByPercent) {
+			var typeByPer = getRatio(d.w1, d.w3); //"typeA"
+
+			switch(typeByPer) {
 				//type A : w1===w3 , typeB: w1>w3, typeC : w1 <w
 				//middle
 				case "typeA":
-					resultArmpos.x = a13.x;
-					resultArmpos.y = a13.y;
+					resultArmpos.x = d.a13.x;
+					resultArmpos.y = d.a13.y;
 					break;
 				//top
 				case "typeB":
-					resultArmpos.x = a13.x;
-					resultArmpos.y = a13.y;
+					resultArmpos.x = d.a13.x;
+					resultArmpos.y = d.a13.y;
 					break;
 				//bottom
 				case "typeC":
-					resultArmpos.x = a9.x;
-					resultArmpos.y = a9.y;
+					resultArmpos.x = d.a9.x;
+					resultArmpos.y = d.a9.y;
 					break;
 				default:
 					console.log("no-type");
-					resultArmpos.x = a9.x;
-					resultArmpos.y = a9.y;
+					resultArmpos.x = d.a9.x;
+					resultArmpos.y = d.a9.y;
 					break;
 			}
+
 			return resultArmpos;
 		}
 		function typeSheet3_arm(){
-			var typeByPercent = getRatio(aw1, aw3); //"typeA"
-			switch(typeByPercent) {
+			var typeByPer = getRatio(d.w1, d.w3); //"typeA"
+			switch(typeByPer) {
 				//top
 				case "typeA":
-					resultArmpos.x = a13.x;
-					resultArmpos.y = a13.y;
+					resultArmpos.x = d.a13.x;
+					resultArmpos.y = d.a13.y;
 					break;
 				//top
 				case "typeB":
-					resultArmpos.x =a13.x;
-					resultArmpos.y = a13.y;
+					resultArmpos.x =d.a13.x;
+					resultArmpos.y = d.a13.y;
 					break;
 				//bottom
 				case "typeC":
-					resultArmpos.x = a9.x;
-					resultArmpos.y = a9.y;
+					resultArmpos.x = d.a9.x;
+					resultArmpos.y = d.a9.y;
 					break;
 				default:
 					console.log("no-type");
-					resultArmpos.x = a9.x;
-					resultArmpos.y = a9.y;
+					resultArmpos.x = d.a9.x;
+					resultArmpos.y = d.a9.y;
 					break;
 			}
 			return resultArmpos;
 		}
 	}
 	//왼손
-	function getArmPos_left(aw1, aw3, a_type){
+	function getArmPos_left(d){
 		var resultArmpos = {};
-		return (a_type === "sheet2")? typeSheet2_arm() : typeSheet3_arm();
+		return (d.sheetType === "sheet2")? typeSheet2_arm(d) : typeSheet3_arm(d);
 		function typeSheet2_arm(){
-			var typeByPercent = getRatio(aw1, aw3); //"typeA"
-			switch(typeByPercent) {
+			var typeByPer = getRatio(d.w1, d.w3); //"typeA"
+			switch(typeByPer) {
 				//type A : w1===w3 , typeB: w1>w3, typeC : w1 <w3
 				//middle
 				case "typeA":
-					resultArmpos.x = a3.x;
-					resultArmpos.y = a3.y;
+					resultArmpos.x = d.a3.x;
+					resultArmpos.y = d.a3.y;
 					break;
 				//top
 				case "typeB":
-					resultArmpos.x =a3.x;
-					resultArmpos.y = a3.y;
+					resultArmpos.x = d.a3.x;
+					resultArmpos.y = d.a3.y;
 					break;
 				//bottom
 				case "typeC":
-					resultArmpos.x = a7.x;
-					resultArmpos.y = a7.y;
+					resultArmpos.x = d.a7.x;
+					resultArmpos.y = d.a7.y;
 					break;
 				default:
 					console.log("no-type");
-					resultArmpos.x = a7.x;
-					resultArmpos.y = a7.y;
+					resultArmpos.x = d.a7.x;
+					resultArmpos.y = d.a7.y;
+					resultArmpos.y = d.a7.y;
 					break;
 			}
 			return resultArmpos;
 		}
-		function typeSheet3_arm(){
-			var typeByPercent = getRatio(aw1, aw3); //"typeA"
-			switch(typeByPercent) {
+		function typeSheet3_arm(d){
+			var typeByPer = getRatio(d.w1, d.w3); //"typeA"
+			switch(typeByPer) {
 				//top
 				case "typeA":
-					resultArmpos.x = a3.x;
-					resultArmpos.y = a3.y;
+					resultArmpos.x = d.a3.x;
+					resultArmpos.y = d.a3.y;
 					break;
 				//top
 				case "typeB":
-					resultArmpos.x = a3.x;
-					resultArmpos.y = a3.y;
+					resultArmpos.x = d.a3.x;
+					resultArmpos.y = d.a3.y;
 					break;
 				//bottom
 				case "typeC":
-					resultArmpos.x = a7.x;
-					resultArmpos.y = a7.y;
+					resultArmpos.x = d.a7.x;
+					resultArmpos.y = d.a7.y;
 					break;
 				default:
 					console.log("no-type");
-					resultArmpos.x = a7.x;
-					resultArmpos.y = a7.y;
+					resultArmpos.x = d.a7.x;
+					resultArmpos.y = d.a7.y;
 					break;
 			}
-			return resultArmpos;
-		}
-	}
-	//중간(테스트)
-	function getArmPos_m_right(aw1, aw3, a_type){
-		var resultArmpos = {};
-		return (a_type === "sheet2")? typeSheet2_arm() : typeSheet3_arm();
-		function typeSheet2_arm(){
-			resultArmpos.x = a13.x;
-			resultArmpos.y = a13.y;
-			return resultArmpos;
-		}
-		function typeSheet3_arm(){
-			resultArmpos.x = a13.x;
-			resultArmpos.y = a13.y;
-			return resultArmpos;
-		}
-	}
-	//중간(테스트)
-	function getArmPos_m_left(aw1, aw3, a_type){
-		var resultArmpos = {};
-		return (a_type === "sheet2")? typeSheet2_arm() : typeSheet3_arm();
-		function typeSheet2_arm(){
-			resultArmpos.x = a3.x;
-			resultArmpos.y = a3.y;
-			return resultArmpos;
-		}
-		function typeSheet3_arm(){
-			resultArmpos.x = a3.x;
-			resultArmpos.y = a3.y;
 			return resultArmpos;
 		}
 	}
@@ -604,29 +620,10 @@ function getRatio(w1, w3){
 
 //getPeanut ==============================================================
 function getPeanutByData(d) {
-	// return getPeanut(200, 100, 150, 30, 90, 1, 1);
-	var h1 =  scales.t.h1(d.r_informative);
-	var h2 = 200-(scales.t.h1(d.r_informative));
-	var w1= scales.t.w1(d.r_beautiful);
-	var w2;
-	var w3= scales.t.w3(d.r_courageous);
-	var a = d.randomA;
-	var b = d.randomB;
-
-	//Set w2 value's Range (based on w1, w3)
-	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
-	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
-
-	//Variable Assignment for quadratic bezier curve point (x, y) ***
-	var t0 = a + b, t1 = a + 2 * b, t2 = 2 * a + b, t3 = 2 * (a + b), t4 = w1 - w2, t5 = w3 - w2;
-	//compute quadratic bezier curve point (x, y)
-	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 }, a2 = { x: -(w1)/2, y:-(h1)/2 }, a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 }, a4 = { x: -w2/2, y:0}, a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2},
-		a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 }, a8 = { x:0, y:h2 }, a9 = { x: (a*w3)/t3, y: (t1*h2)/t3}, a10 = { x: w3/2, y:h2/2 }, a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3}, a12 = { x: w2/2, y:0 },
-		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 }, a14 = { x: w1/2, y: -h1/2 }, a15 = { x: b*w1/t3, y: -(t2*h1)/t3 }, a16 = { x: 0, y:-h1};
 	//MoveTo
-	var MV = "M" + a1.x + "," + a1.y;
+	var MV = "M" + d.a1.x + "," + d.a1.y;
 	//Quadratics
-	var Q1 = " Q " + a2.x + "," + a2.y + " " +  a3.x + "," + a3.y , Q2 = " Q " +  a4.x + "," + a4.y + " " +  a5.x + "," + a5.y , Q3 = " Q " +  a6.x + "," + a6.y + " " +  a7.x + "," + a7.y , Q4 = " Q " +  a8.x + "," + a8.y + " " +  a9.x + "," + a9.y , Q5 = " Q " +  a10.x + "," + a10.y + " " +  a11.x + "," + a11.y ,Q6 = " Q " +  a12.x + "," + a12.y + " " +  a13.x + "," + a13.y , Q7 = " Q " +  a14.x + "," + a14.y + " " +  a15.x + "," + a15.y ,Q8 = " Q " +  a16.x + "," + a16.y + " " +  a1.x + "," + a1.y ;
+	var Q1 = " Q " + d.a2.x + "," + d.a2.y + " " +  d.a3.x + "," + d.a3.y , Q2 = " Q " +  d.a4.x + "," + d.a4.y + " " +  d.a5.x + "," + d.a5.y , Q3 = " Q " +  d.a6.x + "," + d.a6.y + " " +  d.a7.x + "," + d.a7.y , Q4 = " Q " +  d.a8.x + "," + d.a8.y + " " +  d.a9.x + "," + d.a9.y , Q5 = " Q " +  d.a10.x + "," + d.a10.y + " " +  d.a11.x + "," + d.a11.y ,Q6 = " Q " +  d.a12.x + "," + d.a12.y + " " +  d.a13.x + "," + d.a13.y , Q7 = " Q " +  d.a14.x + "," + d.a14.y + " " +  d.a15.x + "," + d.a15.y ,Q8 = " Q " +  d.a16.x + "," + d.a16.y + " " +  d.a1.x + "," + d.a1.y ;
 	//return values
 	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 }
@@ -664,12 +661,9 @@ function getPositionByIndex(){
 
 //눈코입의 위치를 getPeanut 알고리즘에서 계산한다. ===========================================
 function getClassBySheet(d){
-
 	var h1 =  scales.t.h1(d.r_informative);
 	var h2 = 200-(scales.t.h1(d.r_informative));
-
 	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
-
 	return (checkSheetTypes === "sheet2")? "sheetType2" : "sheetType3";
 }
 
