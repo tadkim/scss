@@ -29,15 +29,15 @@ path {
   fill: #3dbd5d; }
 
 .legs {
-  stroke: black;
+  stroke: steelblue;
   stroke-width: 5px;
   stroke-linecap: round;
   z-index: -10;
   fill: none; }
 
 .arms {
-  stroke: #c2ead6;
-  stroke-width: 6px;
+  stroke: steelblue;
+  stroke-width: 4px;
   stroke-linecap: round;
   fill: none; }
 
@@ -47,5 +47,11 @@ path {
   stroke-linecap: round;
   fill: none;
   transform: scaleX(-1); }
+
+.mouth {
+  stroke: coral;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  fill: crimson; }
 
 /*# sourceMappingURL=style.css.map */
