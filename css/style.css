@@ -30,28 +30,31 @@ path {
 
 .legs {
   stroke: steelblue;
-  stroke-width: 5px;
+  stroke-width: 8px;
   stroke-linecap: round;
-  z-index: -10;
   fill: none; }
 
 .arms {
   stroke: steelblue;
-  stroke-width: 4px;
+  stroke-width: 7px;
   stroke-linecap: round;
   fill: none; }
-
-.arms_right {
-  stroke: #8b70c2;
-  stroke-width: 5px;
-  stroke-linecap: round;
-  fill: none;
-  transform: scaleX(-1); }
 
 .mouth {
   stroke: coral;
   stroke-width: 3px;
   stroke-linecap: round;
   fill: crimson; }
+
+.check_text {
+  font-size: 8px;
+  font-weight: bold;
+  color: darkmagenta; }
+
+.eyes {
+  fill: white; }
+
+.pupil {
+  fill: black; }
 
 /*# sourceMappingURL=style.css.map */

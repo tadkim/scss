@@ -1,6 +1,8 @@
 
 @import url(https://fonts.googleapis.com/earlyaccess/notosanskr.css);
 @import url(https://fonts.googleapis.com/earlyaccess/nanummyeongjo.css);
+
+
 $col-simpson : hsl(52, 100%, 48%);
 
 //font
@@ -52,30 +54,38 @@ path{
 .sheetType3{
   fill:#3dbd5d;
 }
+
 .legs{
   stroke: steelblue;
-  stroke-width:5px;
+  stroke-width:8px;
   stroke-linecap:round;
-  z-index:-10;
   fill:none;
 }
 
 .arms{
   stroke: steelblue;
-  stroke-width:4px;
+  stroke-width:7px;
   stroke-linecap:round;
   fill:none;
 }
-.arms_right{
-  stroke: hsl(260, 40%, 60%);
-  stroke-width:5px;
-  stroke-linecap:round;
-  fill:none;
-  transform: scaleX(-1);
-}
+
 .mouth{
   stroke: coral;
   stroke-width:3px;
   stroke-linecap:round;
   fill:crimson;
+}
+
+//[test] a1~a16까지의 point에 대한 텍스트
+.check_text{
+  font-size:8px;
+  font-weight:bold;
+  color:darkmagenta;
+}
+
+.eyes{
+  fill:white;
+}
+.pupil{
+  fill:black;
 }

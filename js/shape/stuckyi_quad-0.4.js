@@ -7,8 +7,6 @@ var svgSize = {w:1280, h:100960};
 var svgMargin = { top:30, right: 30, bottom: 30, left:30};
 var characterMargin = {top:10, right: 10, bottom: 10, left:10};
 
-//sv : shape variables
-var sv = {};
 
 //콘텐츠 기본영역 설정 -----------------------------------------------------------------
 var initSizes = {
@@ -48,7 +46,9 @@ var scales = {
 	},
 	detail : {
 		eyegap:d3.scale.linear().range([1, 10])
-	}
+	},
+	legGap : d3.scale.threshold()
+		.domain([0, 100, 120, 150, 180, 200, 230]).range([0, 2, 4, 8, 12, 18, 28])
 };
 
 
@@ -122,6 +122,8 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 
 		d.sheetType= (d.h1 < d.h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입
 
+
+
 		//Set w2 value's Range (based on w1, w3)
 		if(d.w1 < d.w3){
 			scales.t.w2.range([1, d.w1]);
@@ -130,6 +132,11 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 			scales.t.w2.range([1, d.w3 ]);
 			d.w2 = scales.t.w2(d.r_inspiring);
 		}
+		//widthType 설정 : 이 기준으로 눈, 팔, 다리 길이 가 설정된다.
+		d.widthType = getRatio(d.w1, d.w3); //"typeA"
+
+		//다리길이 설정
+		d.legLength = (d.widthType === "typeC")? 50 : initSizes.legs.leg_length ; // 눈이 아래있으면 50, 그 외의 경우 기본 값( default : 30 )
 
 
 
@@ -184,12 +191,14 @@ function drawTheme(datarow) {
 	//Call Theme functions -----------------------------------------------------------
 	drawingPeanut(dataname);
 
-	function drawingPeanut(d_nm) {
 
+
+
+
+	function drawingPeanut(d_nm) {
 		//d3.area()활용 -----------------------------------------------------------------
 		var g_area = svg.selectAll("g")
-			.data(d_nm).enter().append("g")
-			.attr("transform", function () {return getPositionByIndex() });
+			.data(d_nm).enter().append("g").attr("transform", function () {return getPositionByIndex() });
 
 		//콘텐츠 영역 확인 위한 rectArea element 추가
 		var g_viewer = g_area.append("rect")
@@ -200,14 +209,9 @@ function drawTheme(datarow) {
 		var g_center = g_area.append("g")
 			.attr("class", "g_center")
 			.attr("transform", "translate(140,140)");
-
-		var arms_left = g_center.append("path")
-			.attr("class", "arms")
-			.attr("d", function(d){
-				// var arms = getFeaturesPos(d, "arms_m_left"); //for test : 무조건 팔을 가운데로
+		//팔 ===================================================================
+		var arms_left = g_center.append("path").attr("class", "arms").attr("d", function(d){
 				var arms = getFeaturesPos(d, "arms_left");
-				// yum(left) - row version:각도가 너무 낮았다.
-
 				var A1 = { x: arms.x-20, y:arms.y +10},
 					A2 = { x: arms.x -25, y: arms.y+30 },
 					A3 = { x : arms.x - 37, y: arms.y+30},
@@ -219,10 +223,7 @@ function drawTheme(datarow) {
 					"Q" + A3.x + "," + A3.y + " " + A4.x +"," + A4.y;
 
 			});
-
-		var arms_right = g_center.append("path")
-			.attr("class", "arms")
-			.attr("d", function(d) {
+		var arms_right = g_center.append("path").attr("class", "arms").attr("d", function(d) {
 				// var arms = getFeaturesPos(d, "arms_m_right"); //for test : 무조건 팔을 가운데로
 				var arms = getFeaturesPos(d, "arms_right");
 
@@ -241,18 +242,15 @@ function drawTheme(datarow) {
 
 
 		//Legs(다리) =============================================================
-		var leg_left = g_center.append("polyline")
-			.attr("points", function(d){
+		var leg_left = g_center.append("polyline").attr("points", function(d){
 				var legs = getFeaturesPos(d, "legs_left");
-				var legLength = legs.length; //다리길이
+				var legLength = d.legLength; //다리길이
 				return legs.x + "," + legs.y + " " + legs.x + "," +
 					(legs.y+ legLength) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+legLength);
 			}).attr("class", "legs");
-
-		var leg_right = g_center.append("polyline")
-			.attr("points", function(d){
+		var leg_right = g_center.append("polyline").attr("points", function(d){
 				var legs = getFeaturesPos(d, "legs_right");
-				var legLength = legs.length; //다리길이
+				var legLength = d.legLength; //다리길이
 				return legs.x + "," + legs.y + " " + legs.x + "," +
 					(legs.y+legLength) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+legLength);
 			}).attr("class", "legs");
@@ -265,30 +263,20 @@ function drawTheme(datarow) {
 				console.log(getFeaturesLog(d, "eyes"));
 			});
 
-
-
-
 		//눈 ===============================================================
 		var eyes_left = g_center.append("circle")
-			.attr("r", initSizes.eyes.outRadius)
-			.attr("fill", "white")
-			.attr("class", "eyes_left")
+			.attr("r", initSizes.eyes.outRadius).attr("class", "eyes")
 			.attr("cx", function(d){
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				return -(initSizes.eyes.outRadius+ eyesGap);
-			})
-			.attr("cy", function(d) { return getFeaturesPos(d, "eyes"); });
-
+			}).attr("cy", function(d) { return getFeaturesPos(d, "eyes"); });
 
 		var eyes_right = g_center.append("circle")
-			.attr("r", initSizes.eyes.outRadius)
-			.attr("fill", "white")
-			.attr("class", "eyes_right")
+			.attr("r", initSizes.eyes.outRadius).attr("class", "eyes")
 			.attr("cx", function(d){
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				return initSizes.eyes.outRadius+ eyesGap;
-			})
-			.attr("cy", function(d){
+			}).attr("cy", function(d){
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				return getFeaturesPos(d, "eyes");
 			});
@@ -296,9 +284,7 @@ function drawTheme(datarow) {
 
 		//Pupil(눈동자) =============================================================
 		var pupil_left = g_center.append("circle")
-			.attr("r", initSizes.eyes.inRadius)
-			.attr("fill", "black")
-			.attr("transform", function(d){
+			.attr("r", initSizes.eyes.inRadius).attr("class", "pupil").attr("transform", function(d){
 				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				var eyesX =-( initSizes.eyes.outRadius+ eyesGap);
@@ -308,9 +294,7 @@ function drawTheme(datarow) {
 			});
 
 		var pupil_right = g_center.append("circle")
-			.attr("r", initSizes.eyes.inRadius)
-			.attr("fill", "black")
-			.attr("transform", function(d){
+			.attr("r", initSizes.eyes.inRadius).attr("class", "pupil").attr("transform", function(d){
 				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyegap(d.r_unconvincing)/2;
 				var eyesX = initSizes.eyes.outRadius+ eyesGap;
@@ -319,13 +303,7 @@ function drawTheme(datarow) {
 				return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
-		//check point for test
-		var checkpoint = g_center.append("circle")
-			.attr("r", 8)
-			.attr("transform", function(d){
-				var pos = getCheckpoint(d);
-				return "translate(" + pos.x + "," + pos.y + ")";
-			});
+
 
 		// 입
 		var mouth = g_center.append("rect")
@@ -336,6 +314,21 @@ function drawTheme(datarow) {
 			.attr("ry", 4)
 			.attr("x", - initSizes.mouth.w/2)
 			.attr("y", function(d) { return getFeaturesPos(d, "eyes")+14; });
+
+		//Add check point, text : 체크포인트, 텍스트를 추가한다. ==================================
+		// var checkMate = checkPointer(d_nm, g_center);
+
+
+		//Character Alignment : bottom 기준  ==============================================
+		g_center.attr("transform", function(d){
+			var contentHeight = initSizes.contentsArea.h; //280
+			var characterHeight = (d.a7.y + d.legLength);
+			// 각 콘텐츠 별 가장 아래 지점(발 위치지점)을 가지고 캐릭터 영역(g_area)의 bottom영역까지의 거리를 구한 뒤, 추가로 이동한다.
+			// 쉽게말해, 모든 요소를 그린뒤, 각 캐릭터별 길이가 다르므로, 땅까지의 모자란 정도를 구해서 추가로 이동해주는 것이다. like gravity
+			var moveY = contentHeight - characterHeight;
+			return "translate(140," + moveY + ")";
+		});
+
 		// console.log(g_center[0][0].getBBox());
 		// console.log(g_center[0].getBBox());
 		// console.log(g_center[0].getBBox());
@@ -347,31 +340,51 @@ function drawTheme(datarow) {
 
 }
 
+function checkPointer(d, appendObj){
+	//check point for test ----------------------------------------------------------------------------------------------------------------------------------------
+	var check_text = appendObj.append("g").append("g").attr("class", "check_text").style("fill", "black").style("font-size", 12);
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a1.x + "," + d.a1.y + ")"; }).text("a1");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a2.x + "," + d.a2.y + ")"; }).text("a2");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a3.x + "," + d.a3.y + ")"; }).text("a3");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a4.x + "," + d.a4.y + ")"; }).text("a4");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a5.x + "," + d.a5.y + ")"; }).text("a5");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a6.x + "," + d.a6.y + ")"; }).text("a6");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a7.x + "," + d.a7.y + ")"; }).text("a7");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a8.x + "," + d.a8.y + ")"; }).text("a8");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a9.x + "," + d.a9.y + ")"; }).text("a9");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a10.x + "," + d.a10.y + ")"; }).text("a10");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a11.x + "," + d.a11.y + ")"; }).text("a11");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a12.x + "," + d.a12.y + ")"; }).text("a12");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a13.x + "," + d.a13.y + ")"; }).text("a13");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a14.x + "," + d.a14.y + ")"; }).text("a14");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a15.x + "," + d.a15.y + ")"; }).text("a15");
+	check_text.append("text").attr("transform", function(d){ return "translate(" + d.a16.x + "," + d.a16.y + ")"; }).text("a16");
+
+	//check point for test ----------------------------------------------------------------------------------------------------------------------------------------
+	var check_point = appendObj.append("g").append("g").attr("class", "check_point").style("fill", "darkorange");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a1.x + "," + d.a1.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a2.x + "," + d.a2.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a3.x + "," + d.a3.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a4.x + "," + d.a4.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a5.x + "," + d.a5.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a6.x + "," + d.a6.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a7.x + "," + d.a7.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a8.x + "," + d.a8.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a9.x + "," + d.a9.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a10.x + "," + d.a10.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a11.x + "," + d.a11.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a12.x + "," + d.a12.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a13.x + "," + d.a13.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a14.x + "," + d.a14.y + ")"; });
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a15.x + "," + d.a15.y + ")"; }).style("fill", "darkmagenta");
+	check_point.append("circle").attr("r", "2").attr("transform", function(d){ return "translate(" + d.a16.x + "," + d.a16.y + ")"; });
+}
+
+
 
 //눈코입의 위치를 getPeanut 알고리즘에서 계산한다. ===========================================
 function getFeaturesPos(d, featureName) {
 	var resultPosValues; //최종 리턴 변수
-
-	// var h1 =  scales.t.h1(d.r_informative), h2 = 200-(scales.t.h1(d.r_informative)),  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
-
-	// var h1 =  d.h1, h2 = 200-d.h1,  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
-
-
-	var checkSheetTypes = d.sheetType;
-
-
-
-	//Variable Assignment for quadratic bezier curve point (x, y) ***
-	// var t0 = d.a + d.b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
-
-	//compute quadratic bezier curve point (x, y)
-	/*
-	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
-		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
-		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
-		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
-		*/
-
 
 	//feature 이름에 따라 계산식을 다르게 부여(신체부위마다 위치계산법이 다르기 때문)
 	switch(featureName){
@@ -394,9 +407,8 @@ function getFeaturesPos(d, featureName) {
 			resultPosValues = getEyePosY(d);
 			break;
 	}
-	return resultPosValues; //최종 return value.
-
-
+	//최종 return value. ***
+	return resultPosValues;
 
 	//눈 위치 얻기
 	function getEyePosY(d){
@@ -414,77 +426,41 @@ function getFeaturesPos(d, featureName) {
 			if(typeByPer === "typeC"){ return d.a6.y; } // w1 <w3 : bottom
 		}
 	}
-
-
-
 	// 다리위치 얻기
 	function getLegPos(d, dir){
-	// function getLegPos(rw1, rw3, s_types, dir){
-
 		var resultLegPos = {};
-		var checkSheeType = d.sheetType; //"sheetA"
-		var typeByPer = getRatio(d.w1, d.w3); //"typeA"
-
-		//다리길이 설정
-		resultLegPos.length = initSizes.legs.leg_length ; //default : 30
-
-		if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.length = 50; }
-		if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.length = 50; }
-
 		var criticalmass_leg = initSizes.legs.depth; //w1, w3모두 200이 넘으면 발동
-		var critical_w2 = initSizes.legs.crt_w3; // 엉덩이가 기준값 초과시 다리위치를 좁히기 위함(a7, a9 기준이라서)
 		var legGap = criticalmass_leg * initSizes.legs.legGaps;
-
 		var splitDir = dir.split("_")[1];
+
 		return (splitDir === "left")? legTypeLeft() : legTypeRight();
 
+		//왼발
 		function legTypeLeft(){
 			if( (d.w1 > criticalmass_leg ) && (d.w3 > criticalmass_leg) ){
 				resultLegPos.x = d.a7.x - legGap; //200둘다 넘는 애들에게만 10px 추가 부여
 				resultLegPos.y = Math.abs(d.a7.y) -10;
 			}else{
-				// resultLegPos.x = a7.x;
-				// resultLegPos.y = Math.abs(a7.y) -10;
-				resultLegPos.x = d.a7.x;
+				var legGapControl = scales.legGap(d.w3);
+				resultLegPos.x = (d.widthType === "typeC")? 10 : d.a7.x + legGapControl;
 				resultLegPos.y = Math.abs(d.a7.y) -10;
-				if( d.w3 >120 ){ resultLegPos.x = d.a7.x + 4; }
-				if( d.w3 >150 ){ resultLegPos.x = d.a7.x + 8; }
-				if( d.w3 >180 ){ resultLegPos.x = d.a7.x + 12; }
-				if( d.w3 > 200 ){ resultLegPos.x = d.a7.x + 18; }
-				if( d.w3 > 230 ){ resultLegPos.x = d.a7.x + 28; }
-
-
-				// 눈 아래달린 애들이면 다 무시하고 가운데에 다리 모으기
-				if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.x = 10; }
-				if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.x = 10; }
 			}
 			return resultLegPos;
 		}
-
+		//오른발
 		function legTypeRight(){
 			if( (d.w1 > criticalmass_leg ) && (d.w3 > criticalmass_leg) ){
 				resultLegPos.x = d.a9.x +legGap; //200둘다 넘는 애들에게만 10px 추가 부여
 				resultLegPos.y = Math.abs(d.a9.y) -10;
 			} else{
-				resultLegPos.x = d.a9.x;
+				var legGapControl = scales.legGap(d.w3);
+				resultLegPos.x = (d.widthType === "typeC")? -10 : d.a9.x - legGapControl;
 				resultLegPos.y = Math.abs(d.a9.y) -10;
-				if( d.w3 >120 ){ resultLegPos.x = d.a9.x -4; } //w3 150초과시 -4px
-				if( d.w3 >150 ){ resultLegPos.x = d.a9.x -8; } //w3 150초과시 -4px
-				if( d.w3 >180 ){ resultLegPos.x = d.a9.x - 12; } //w3 180초과시 -12px
-				if( d.w3 > 200 ){ resultLegPos.x = d.a9.x -18; } //w3 200 초과시 -18px
-				if( d.w3 > 230 ){ resultLegPos.x = d.a9.x -28; } //w3 200 초과시 -18px
-
-				// 눈 아래달린 애들이면 다 무시하고 가운데에 다리 모으기
-				if( (checkSheeType === "sheet2") && (typeByPer === "typeC") ) { resultLegPos.x = -10; }
-				if( (checkSheeType === "sheet3") && (typeByPer === "typeC") ) { resultLegPos.x = -10; }
 			}
 			return resultLegPos;
 		}
-
 		return resultLegPos;
 	}
-
-
 	//오른손
 	function getArmPos_right(d){
 		var resultArmpos = {};
@@ -615,9 +591,6 @@ function getRatio(w1, w3){
 	else { return "typeB";  } //w1 > w3 : top
 }
 
-
-
-
 //getPeanut ==============================================================
 function getPeanutByData(d) {
 	//MoveTo
@@ -725,7 +698,6 @@ function getPeanut(h1, h2, w1, w2, w3, a, b){
 	return MV + Q1 + Q2 + Q3 + Q4 + Q5 + Q6 + Q7+ Q8;
 }
 
-
 //눈코입의 위치를 getPeanut 알고리즘에서 계산한다.
 function getFeaturesLog(d, featureName) {
 	var resultPosValues; //최종 리턴 변수
@@ -793,24 +765,3 @@ function getFeaturesLog(d, featureName) {
 
 } // END - getFeaturesPos()
 
-
-function getCheckpoint(d){
-
-	var h1 =  scales.t.h1(d.r_informative), h2 = 200-(scales.t.h1(d.r_informative)),  w1= scales.t.w1(d.r_beautiful), w2, w3= scales.t.w3(d.r_courageous), a = d.randomA, b = d.randomB;
-	var checkSheetTypes = (h1 < h2 === true)? "sheet2" : "sheet3"; //h1>h2 크기 비교후 sheet 타입 나눈다.
-
-	//Set w2 value's Range (based on w1, w3)
-	if(w1 < w3){ scales.t.w2.range([1, w1]); w2 = scales.t.w2(d.r_inspiring); }
-	else { scales.t.w2.range([1, w3 ]); w2 = scales.t.w2(d.r_inspiring); }
-
-	//Variable Assignment for quadratic bezier curve point (x, y) ***
-	var t0 = a + b, t1 = a + 2 * b,  t2 = 2 * a + b,  t3 = 2 * (a + b),  t4 = w1 - w2,  t5 = w3 - w2;
-
-	//compute quadratic bezier curve point (x, y)
-	var  a1  = { x: -(b*w1)/t3 , y:-(t2*h1)/t3 },  a2 = { x: -(w1)/2, y:-(h1)/2 },  a3 = { x: -(w2*t0+a*t4)/t3, y: -(h1*a)/t3 },  a4 = { x: -w2/2, y:0},
-		a5 = { x: -(w2*t0+t5*b)/t3, y: (b*h2)/t3}, a6 = { x: -w3/2, y:h2/2}, a7 = { x: -(a*w3)/t3, y:(t1*h2)/t3 },  a8 = { x:0, y:h2 },
-		a9 = { x: (a*w3)/t3, y: (t1*h2)/t3},  a10 = { x: w3/2, y:h2/2 },  a11 = { x: (w2*t0+t5*b)/t3, y:(b*h2)/t3},  a12 = { x: w2/2, y:0 },
-		a13 = { x: (w2*t0+a*t4)/t3, y:-(h1*a)/t3 },  a14 = { x: w1/2, y: -h1/2 },  a15 = { x: b*w1/t3, y: -(t2*h1)/t3 },  a16 = { x: 0, y:-h1};
-
-	return a13;
-}
