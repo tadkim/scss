@@ -49,14 +49,17 @@ path{
 
 //test
 .sheetType2{
-  fill:#2677bb;
+  //fill:#2677bb;
+  fill:#0193a0;
 }
 .sheetType3{
-  fill:#3dbd5d;
+  //fill:#3dbd5d;
+  fill:#0193a0;
 }
 
 .legs{
-  stroke: steelblue;
+  stroke: #f4a81f;
+  //stroke: steelblue;
   stroke-width:8px;
   stroke-linecap:round;
   fill:none;
@@ -66,16 +69,43 @@ path{
   stroke: steelblue;
   stroke-width:7px;
   stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+//긁적긁적
+.arms_case2{
+  stroke: #f4a81f;
+  stroke-width:7px;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+.arms_case1{
+  stroke: #f4a81f;
+  stroke-width:7px;
+  stroke-linecap:round;
+  stroke-linejoin:round;
   fill:none;
 }
 
 .mouth{
   stroke: coral;
-  stroke-width:3px;
+  stroke-width:2px;
   stroke-linecap:round;
   fill:crimson;
 }
-
+.mouth-rotate{
+  stroke-width:3px;
+  stroke-linecap:round;
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -ms-transform-origin: 50% 50%; /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Chrome, Safari, Opera */
+  -webkit-transform-origin: 50% 50%; /* Chrome, Safari, Opera */
+  -moz-transform: rotate(90deg);
+  -moz-transform-origin: 50% 50%;
+  transform: rotate(90deg);
+  transform-origin: 50% 50%;
+}
 //[test] a1~a16까지의 point에 대한 텍스트
 .check_text{
   font-size:8px;
@@ -88,4 +118,8 @@ path{
 }
 .pupil{
   fill:black;
+}
+.lid{
+
+  //stroke-width:4px;
 }

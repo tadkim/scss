@@ -6,15 +6,20 @@
 var svgSize = {w:1280, h:100960};
 var svgMargin = { top:30, right: 30, bottom: 30, left:30};
 var characterMargin = {top:10, right: 10, bottom: 10, left:10};
+var theme = {
+	case1 : true, //푸춰핸섭
+	case2 : false  //긁적긁적
+};
 
 
 //콘텐츠 기본영역 설정 -----------------------------------------------------------------
 var initSizes = {
 	contentsArea : {w:280, h:280},
-	mouth :{ w:12, h:20 },
+	mouth :{ w:14, h:38 },
 	mouth_inner :{ w:40, h:10 },
-	eyes:{ outRadius:8, inRadius:2, stroke:4},
-	legs:{ instep:10, leg_length:50, depth:240, legGaps:0.1, crt_w3:150 }
+	eyes:{ outRadius:5, inRadius:2, lid:9, stroke:4},
+	legs:{ instep:10, leg_length:50, depth:240, legGaps:0.1, crt_w3:150 },
+	arms:{ offsetX:4 }
 };
 var t = 1, indexCounter=0;
 var xPos  = svgMargin.left + characterMargin.left, yPos  = 100, yGap  = 280;
@@ -45,7 +50,7 @@ var scales = {
 		w3:d3.scale.linear().range([80, 250]),
 	},
 	detail : {
-		eyeGap:d3.scale.linear().range([6, 60])
+		eyeGap:d3.scale.linear().range([2, 20])
 	},
 	legGap : d3.scale.threshold()
 		.domain([0, 100, 120, 150, 180, 200, 230]).range([0, 2, 4, 8, 12, 18, 28])
@@ -174,10 +179,116 @@ d3.tsv("data/ted_0.6_all.tsv", function(error, dataset) {
 		d.randomA = Math.floor(Math.random()*3)+1;
 		d.randomB = Math.floor(Math.random()*3)+1;
 
+		//get random HSL Color variables
+
+		d.col = { body:{}, etc:{}, mouth:{ fill:{}, stroke:{} } };
+		var randomABC = Math.floor(Math.random()*4)+1;// 0~3
+
+		switch(randomABC){
+			//나머지 - 기본 2차원영역
+			case 1:
+				d.col.body.h = getRandomColors(); //get hue val
+				d.col.body.s = randomRange(20, 80);
+				d.col.body.l = randomRange(20, 80);
+
+				d.col.etc.h = 360- d.col.body.h;
+				d.col.etc.s = 100-d.col.body.s;
+				d.col.etc.l = randomRange(20, 80);
+
+				d.col.mouth.stroke.h = (d.col.body.h <= 150)? randomRange(240, 300) : randomRange(20, 45);
+				d.col.mouth.stroke.s = randomRange(40, 90);
+				d.col.mouth.stroke.l = randomRange(40, 80);
+
+				break;
+
+			//하늘색
+			case 2:
+				d.col.body.h = randomRange(150, 200); //get hue val
+				d.col.body.s = randomRange(20, 80);
+				d.col.body.l = randomRange(20, 80);
+
+				d.col.etc.h = randomRange(30, 50);
+				d.col.etc.s = 100-d.col.body.s;
+				d.col.etc.l = randomRange(20, 80);
+
+				d.col.mouth.stroke.h = (Math.round(Math.random()) === 0 )? randomRange(0, 70) : randomRange(290, 360);
+				d.col.mouth.stroke.s = randomRange(40, 90);
+				d.col.mouth.stroke.l = randomRange(60, 80);
+				break;
+			//Left Red
+			case 3:
+				d.col.body.h = randomRange(0, 20); //get hue val
+				d.col.body.s = randomRange(20, 80);
+				d.col.body.l = randomRange(20, 80);
+
+				d.col.etc.h = randomRange(60, 250);
+				d.col.etc.s = 100-d.col.body.s;
+				d.col.etc.l = randomRange(20, 80);
+
+				d.col.mouth.stroke.h =randomRange(130, 200);
+				d.col.mouth.stroke.s = randomRange(40, 90);
+				d.col.mouth.stroke.l = randomRange(60, 80);
+				break;
+			//Right Red
+			case 4:
+				d.col.body.h = randomRange(290, 360); //get hue val
+				d.col.body.s = randomRange(20, 80);
+				d.col.body.l = randomRange(20, 80);
+
+				d.col.etc.h = randomRange(50, 260);
+				d.col.etc.s = 100-d.col.body.s;
+				d.col.etc.l = randomRange(20, 80);
+
+				d.col.mouth.stroke.h =randomRange(50, 190);
+				d.col.mouth.stroke.s = (Math.round(Math.random()) === 0 )? randomRange(0, 20) : randomRange(40, 90);
+				d.col.mouth.stroke.l = randomRange(60, 80);
+				break;
+			//나머지
+			default:
+				d.col.body.h = getRandomColors(); //get hue val
+				d.col.body.s = randomRange(20, 80);
+				d.col.body.l = randomRange(20, 80);
+
+				d.col.etc.h = 360- d.col.body.h;
+				d.col.etc.s = 100-d.col.body.s;
+				d.col.etc.l = randomRange(20, 80);
+
+				d.col.mouth.stroke.h = (d.col.body.h <= 150)? randomRange(240, 300) : randomRange(20, 45);
+				d.col.mouth.stroke.s = randomRange(70, 90);
+				d.col.mouth.stroke.l = randomRange(60, 80);
+
+
+				break;
+		}
+
+		d.col.mouth.fill.h = d.col.body.h;
+		d.col.mouth.fill.s = d.col.body.s + 10;
+		d.col.mouth.fill.l = d.col.body.l - 20;
+
+
+
+
+
+
+
+
+		/*
+
+
+
+		var col_s = randomRange(20, 80);
+		var col_l = randomRange(20, 80);
+		return "hsl(" + col_h + "," + col_s + "%," + col_l +"%)";
+		*/
+
 	}); // dataset.forEach end()
 
 
-	// dataset = dataset.filter(function(element){ return element.Beautiful > 2000; }); //데이터 셋 필터링
+	// dataset = dataset.filter(function(element){
+		// return element.Beautiful > 2000;
+
+		// return ( (element.sheetType === "sheet3") && (element.widthType === "typeB") );
+	// }); //데이터 셋 필터링
 
 	//드로잉 테마 호출
 	drawTheme(dataset);
@@ -210,6 +321,8 @@ function drawTheme(datarow) {
 			.attr("class", "g_center")
 			.attr("transform", "translate(140,140)");
 		//팔 ===================================================================
+		//default arms
+		/*
 		var arms_left = g_center.append("path").attr("class", "arms").attr("d", function(d){
 				var arms = getFeaturesPos(d, "arms_left");
 				var A1 = { x: arms.x-20, y:arms.y +10},
@@ -239,29 +352,97 @@ function drawTheme(datarow) {
 					"Q" + A3.x + "," + A3.y + " " + A4.x + "," + A4.y;
 
 			});
+		*/
+		//case1  - 푸춰핸섭 160517
+		var c1_backL = (theme.case1 === true)? g_center.append("path").attr("class", "arms_case1").attr("d", function(d){
+			// if(d.sheetType === "sheet2" && d.widthType === "typeB"){
+				return "M" + (d.a5.x + initSizes.arms.offsetX) + "," + d.a5.y + " " +
+						"L"  + (d.a2.x-10) + "," + d.a2.y + " " +
+						"A10,15 0 0,1" + " " + (d.a2.x-25) + "," + (d.a2.y-5);
+			// }
+		})
+			.style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";}) : undefined;
+		var c1_backR = (theme.case1 === true)? g_center.append("path").attr("class", "arms_case1").attr("d", function(d) {
+			// if(d.sheetType === "sheet2" && d.widthType === "typeB"){
+				return "M" + (-(d.a5.x + initSizes.arms.offsetX)) + "," + d.a5.y + " " +
+					"L"  + (-(d.a2.x-10)) + "," + d.a2.y + " " +
+					"A10,15 0 0,0" + " " + (-(d.a2.x-25)) + "," + (d.a2.y-5);
+			// }
+		})
+			.style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";}) : undefined;
 
+
+
+		 //case2  - 긁적긁적 160517
+		var c2_backL = (theme.case2 === true)? g_center.append("path").attr("class", "arms_case2").attr("d", function(d){
+			// if(d.sheetType === "sheet2" && d.widthType === "typeB"){
+			return "M" + (d.a5.x + initSizes.arms.offsetX) + "," + d.a5.y + " " +
+					"L" + (d.a2.x-20) + "," + ((d.a1.y+d.a5.y)/2) + " " + ((d.a2.x+d.a5.x-20)/2) + "," + ((2*d.a1.y+d.a4.y+d.a5.y)/4);
+			// }
+		}).style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";}) : undefined; //case2 : 긁적긁적 backL
+		var c2_backR = (theme.case2 === true)? g_center.append("path").attr("class", "arms_case2").attr("d", function(d) {
+			// if(d.sheetType === "sheet2" && d.widthType === "typeB"){
+			return "M" + (-(d.a5.x + initSizes.arms.offsetX)) + "," + d.a5.y + " " +
+				"L" + (-(d.a2.x-20)) + "," + ((d.a1.y+d.a5.y)/2) + " " + (-((d.a2.x+d.a5.x-20)/2)) + "," + ((2*d.a1.y+d.a4.y+d.a5.y)/4);
+			// }
+		}).style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";}) : undefined;//case2 : 긁적긁적 backR
 
 		//Legs(다리) =============================================================
-		var leg_left = g_center.append("polyline").attr("points", function(d){
+		var leg_left =  g_center.append("polyline").attr("points", function(d){
 				var legs = getFeaturesPos(d, "legs_left");
 				var legLength = d.legLength; //다리길이
-				return legs.x + "," + legs.y + " " + legs.x + "," +
-					(legs.y+ legLength) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+legLength);
-			}).attr("class", "legs");
+				return legs.x + "," + legs.y + " " + legs.x + "," +  (legs.y+ legLength) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+legLength);
+			}).attr("class", "legs")
+			.style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";});
+
 		var leg_right = g_center.append("polyline").attr("points", function(d){
 				var legs = getFeaturesPos(d, "legs_right");
 				var legLength = d.legLength; //다리길이
 				return legs.x + "," + legs.y + " " + legs.x + "," +
 					(legs.y+legLength) + " " + (legs.x-(initSizes.legs.instep)) + "," + (legs.y+legLength);
-			}).attr("class", "legs");
+			}).attr("class", "legs")
+			.style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";});
 
 		//몸체 ===============================================================
 		var bodyEl = g_center.append("path")
 			.attr("class", function(d){ return getClassBySheet(d); })
 			.attr("d", function (d) { return getPeanutByData(d); })
+			.style("fill", function(d){ return "hsl(" + d.col.body.h + "," + d.col.body.s + "%," + d.col.body.l +"%)";})
 			.on("mouseover", function(d, i){
-				console.log(getFeaturesLog(d, "eyes") + "," + i);
+
+				console.log("body col : " + "hsl(" + d.col.body.h + "," + d.col.body.s + "%," + d.col.body.l +"%)" + ", etc col : " +
+					"hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)");
+				// console.log(getFeaturesLog(d, "eyes") + "," + i);
 			});
+
+
+
+		//눈꺼풀 =============================================================
+		var lid_left = g_center.append("circle")
+			.attr("r", initSizes.eyes.lid).attr("class", "lid")
+			.attr("transform", function(d){
+				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
+				var eyePos = getFeaturesPos(d, "eyes"); //return obj
+				var eyesX =-(initSizes.eyes.outRadius+ eyesGap);
+				var eyesY = eyePos.y;
+				return "translate(" +  eyesX + "," + eyesY + ")";
+			})
+			.style("fill", function(d){ return "hsl(" + d.col.body.h + "," + d.col.body.s + "%," + d.col.body.l +"%)";});
+			// .style("fill", "#0193a0");
+			// .style("fill", function(d){ return (d.sheetType === "sheet2")? "#2677bb" : "#3dbd5d"; });
+
+		var lid_right = g_center.append("circle")
+			.attr("r", initSizes.eyes.lid).attr("class", "lid").attr("transform", function(d){
+				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
+				var eyePos = getFeaturesPos(d, "eyes"); //return obj
+				var eyesX = initSizes.eyes.outRadius+ eyesGap;
+				var eyesY = eyePos.y;
+				return "translate(" +  eyesX + "," + eyesY + ")";
+			})
+			.style("fill", function(d){ return "hsl(" + d.col.body.h + "," + d.col.body.s + "%," + d.col.body.l +"%)";});
+			// .style("fill", "#0193a0");
+			// .style("fill", function(d){ return (d.sheetType === "sheet2")? "#2677bb" : "#3dbd5d"; });
+
 
 		//눈 ===============================================================
 		var eyes_left = g_center.append("circle")
@@ -269,84 +450,98 @@ function drawTheme(datarow) {
 			.attr("class", "eyes")
 			.attr("cx", function(d){
 				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
-				return -( (initSizes.eyes.outRadius-initSizes.eyes.stroke)+ eyesGap);
+				return -( initSizes.eyes.outRadius+ eyesGap);
 			})
 			.attr("cy", function(d) {
 				var eyePos = getFeaturesPos(d, "eyes");
 				return eyePos.y;
-			})
-			.style("stroke", function(d){ return (d.sheetType === "sheet2")? "#2677bb" : "#3dbd5d"; })
-			.style("stroke-width", function(d,i){
-				var eyePos = getFeaturesPos(d, "eyes");
-				var eyeTypes = eyePos.eyeType; //"top", "middle", "bottom"
-				var tmax = { w1:(d.a15.x*2), w2:(d.a13.x*2), w3:(d.a11.x*2) }; //eye위치(t, m, b)에 따른 max width
-				var eyesGap = scales.detail.eyeGap(d.r_unconvincing);
-				var checkOverflow = initSizes.eyes.outRadius*4+ eyesGap;
-				if( eyeTypes === "top"){ return (checkOverflow > tmax.w1)? initSizes.eyes.stroke : 0; }
-				if( eyeTypes === "middle"){ return (checkOverflow > tmax.w2)? initSizes.eyes.stroke : 0; }
-				if( eyeTypes === "bottom"){ return (checkOverflow > tmax.w3)? initSizes.eyes.stroke : 0; }
-				return 4;
 			});
+
 
 		var eyes_right = g_center.append("circle")
 			.attr("r", initSizes.eyes.outRadius).attr("class", "eyes")
 			.attr("cx", function(d){
 				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
-				return (initSizes.eyes.outRadius - initSizes.eyes.stroke) + eyesGap; //눈의 r에서 stroke-width 값을 빼야한다.그렇지않으면 눈이 바깥으로 나가버린다.
+				return initSizes.eyes.outRadius + eyesGap;
 			})
 			.attr("cy", function(d){
 				var eyePos = getFeaturesPos(d, "eyes");
 				return eyePos.y;
-			})
-			.style("stroke", function(d){ return (d.sheetType === "sheet2")? "#2677bb" : "#3dbd5d"; })
-			.style("stroke-width", function(d,i){
-				var eyePos = getFeaturesPos(d, "eyes");
-				var eyeTypes = eyePos.eyeType; //"top", "middle", "bottom"
-				var tmax = { w1:(d.a15.x*2), w2:(d.a13.x*2), w3:(d.a11.x*2) }; //eye위치(t, m, b)에 따른 max width
-				var eyesGap = scales.detail.eyeGap(d.r_unconvincing);
-				var checkOverflow = initSizes.eyes.outRadius*4+ eyesGap;
-				if( eyeTypes === "top"){ return (checkOverflow > tmax.w1)? initSizes.eyes.stroke : 0; }
-				if( eyeTypes === "middle"){ return (checkOverflow > tmax.w2)? initSizes.eyes.stroke : 0; }
-				if( eyeTypes === "bottom"){ return (checkOverflow > tmax.w3)? initSizes.eyes.stroke : 0; }
-				return 4;
 			});
+
 
 
 		//Pupil(눈동자) =============================================================
 		var pupil_left = g_center.append("circle")
 			.attr("r", initSizes.eyes.inRadius).attr("class", "pupil")
 			.attr("transform", function(d){
-				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
 				var eyePos = getFeaturesPos(d, "eyes"); //return obj
-				var eyesX =-( (initSizes.eyes.outRadius-initSizes.eyes.stroke)+ eyesGap );
+				var eyesX =-(initSizes.eyes.outRadius+ eyesGap) ;
 				var eyesY = eyePos.y;
-
 				return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
 		var pupil_right = g_center.append("circle")
 			.attr("r", initSizes.eyes.inRadius).attr("class", "pupil").attr("transform", function(d){
-				//a, b값의 비율을 통해 type(frameA, frameB, frameC)을 얻는다.
 				var eyesGap = scales.detail.eyeGap(d.r_unconvincing)/2;
 				var eyePos = getFeaturesPos(d, "eyes"); //return obj
-				var eyesX = (initSizes.eyes.outRadius-initSizes.eyes.stroke)+ eyesGap;
+				var eyesX = initSizes.eyes.outRadius+ eyesGap;
 				var eyesY = eyePos.y;
 				return "translate(" +  eyesX + "," + eyesY + ")";
 			});
 
 
+		//case2  - 긁적긁적 160517=============================================================
+		var c2_frontL= (theme.case2 === true)? g_center.append("path").attr("class", "arms_case2").attr("d", function(d){
+			return "M" + (d.a1.x + initSizes.arms.offsetX) + "," + d.a1.y + " " +
+				"A40,25 0 0,0" + " " + d.a5.x + "," + ((d.a1.y + d.a4.y)/2) + " " +
+				"L" + ((d.a2.x+d.a5.x-20) /2) +"," + ((2*d.a1.y+d.a4.y+d.a5.y)/4);
+		})
+		.style("stroke", function(d){
+			return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";
+		}) : undefined; //case2 : 긁적긁적 frontL
+		var c2_frontR = (theme.case2 === true)? g_center.append("path").attr("class", "arms_case2").attr("d", function(d) {
+			// if(d.sheetType === "sheet2" && d.widthType === "typeB"){
+			return "M" + (-(d.a1.x + initSizes.arms.offsetX)) + "," + d.a1.y + " " +
+				"A40,25 0 0,1" + " " + (-d.a5.x) + "," + ((d.a1.y + d.a4.y)/2) + " " +
+				"L" + (-((d.a2.x+d.a5.x-20) /2)) +"," + ((2*d.a1.y+d.a4.y+d.a5.y)/4);
+			// }
+		}) .style("stroke", function(d){ return "hsl(" + d.col.etc.h + "," + d.col.etc.s + "%," + d.col.etc.l +"%)";}): undefined;//case2 : 긁적긁적 frontR
 
+/*
 		// 입
 		var mouth = g_center.append("rect")
 			.attr("width",initSizes.mouth.w).attr("height", initSizes.mouth.h)
 			.attr("class", "mouth")
-			.attr("rx", 4).attr("ry", 4)
+			.attr("rx", 1).attr("ry", 10)
 			.attr("x", - initSizes.mouth.w/2)
 			.attr("y", function(d){
 				var eyePos = getFeaturesPos(d, "eyes");
 				return eyePos.y+14;
 			})
+*/
+
+		// 입
+		var mouth = g_center.append("path")
+			.attr("d", function(d){
+				var eyePos = getFeaturesPos(d, "eyes");
+				var x = -initSizes.mouth.w/2;
+				var y = eyePos.y+14;
+				var w = initSizes.mouth.w;
+				var h = initSizes.mouth.w;
+				var r = 6; // width border radius;
+				return rightRoundedRect(x, y, w, h, r);
+			})
+			.style("fill", function(d){ return "hsl(" + d.col.mouth.fill.h + "," +d.col.mouth.fill.s+ "%," + d.col.mouth.fill.l +"%)";})
+			.style("stroke", function(d){ return "hsl(" + d.col.mouth.stroke.h + "," +d.col.mouth.stroke.s+ "%," + d.col.mouth.stroke.l +"%)";})
+			.attr("class", "mouth-rotate");
+
+			// .style("transform", "rotate(90deg)");
+
+
+			// .attr("class", "mouth");
+
 
 		//Add check point, text : 체크포인트, 텍스트를 추가한다. ==================================
 		// var checkMate = checkPointer(d_nm, g_center);
@@ -801,3 +996,30 @@ function getFeaturesLog(d, featureName) {
 
 } // END - getFeaturesPos()
 
+
+
+
+//랜덤 범위 생성기
+function randomRange(start, end) {
+	return Math.floor((Math.random() * (end-start+1)) + start);
+}
+
+//랜덤 hsl color var 생성기
+function getRandomColors(){
+	var randomAB = Math.round(Math.random());
+	return (randomAB === 0)? randomRange(0, 150) : randomRange(200, 360);
+}
+
+
+
+
+//
+function rightRoundedRect(x, y, width, height, radius) {
+	return "M" + x + "," + y
+		+ "h" + (width - radius)
+		+ "a" + radius + "," + radius + " 1 0 1 " + radius + "," + radius
+		+ "v" + (height - 2 * radius)
+		+ "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
+		+ "h" + (radius - width)
+		+ "z";
+}
